@@ -48,7 +48,7 @@ npm test           # unit tests for encoding and URL handling
 ## Permissions
 
 `activeTab`, `contextMenus`, `storage` — all three are on Mozilla's no-warning list,
-so installing shows no permission prompt. Notably absent:
+so installing shows no permission prompt.
 
 ## Layout
 
