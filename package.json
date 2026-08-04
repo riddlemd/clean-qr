@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Firefox extension that generates QR codes for the current page, links, images, and selected text.",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "start": "web-ext run --source-dir .",

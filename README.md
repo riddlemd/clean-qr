@@ -94,4 +94,7 @@ change rather than making it silently.
 
 ## License
 
-The vendored QR library is MIT (`src/vendor/LICENSE`).
+MIT — see [`LICENSE`](LICENSE).
+
+The vendored QR library, `qrcode-generator` by Kazuhiko Arase, is separately MIT
+licensed and redistributed unmodified; its notice is at `src/vendor/LICENSE`.
