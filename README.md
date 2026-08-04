@@ -5,11 +5,26 @@ entirely offline — nothing is ever sent to a server.
 
 Works on Firefox desktop (macOS, Windows, Linux) and Firefox for Android.
 
-## Status
+## Screenshots
 
-Built and verified on Firefox 153 desktop: 0 lint findings, 18 passing unit tests.
-Android export paths still need on-device testing — the clipboard, download, and
-share paths all diverge from desktop and none can be verified in a desktop browser.
+### Firefox desktop
+
+| Popup | Context menu |
+| --- | --- |
+| <img src="docs/screenshots/desktop-popup.png" alt="Popup showing a QR code for the current page" width="360"> | <img src="docs/screenshots/desktop-menu.png" alt="Right-click menu with a Generate QR Code for Page entry" width="300"> |
+
+<img src="docs/screenshots/desktop-options.png" alt="Settings, shown in the Firefox Add-ons Manager" width="660">
+
+### Firefox for Android
+
+| Popup | Browser menu | Settings |
+| --- | --- | --- |
+| <img src="docs/screenshots/android-popup.png" alt="Full-window QR code overlay on Android" width="220"> | <img src="docs/screenshots/android-menu.png" alt="Android browser menu with the extension listed" width="220"> | <img src="docs/screenshots/android-options.png" alt="Settings on Android" width="220"> |
+
+The popup is one shared UI: a 360px panel anchored to the toolbar button on desktop,
+and a full-window overlay on Android, where Web Share replaces the desktop clipboard
+actions. In every shot the encoded URL is `https://example.com/?id=42` — the page was
+loaded with a `utm_source` parameter that tracking-stripping removed before encoding.
 
 ## Install for development
 
@@ -23,10 +38,6 @@ npm test           # unit tests for encoding and URL handling
 
 ## How it works
 
-There is **no way for a WebExtension to add an entry to a native OS share sheet** on
-macOS, Windows, or Android — no API exists on any platform. The extension therefore
-uses Firefox's own surfaces:
-
 | Surface | Desktop | Android |
 | --- | --- | --- |
 | Toolbar button + popup | yes | yes (full-window overlay) |
@@ -34,22 +45,10 @@ uses Firefox's own surfaces:
 | Keyboard shortcut (`Ctrl/Cmd+Shift+Q`) | yes | no |
 | Share to the OS share sheet | no — Web Share is flag-gated off | yes, via `navigator.share()` |
 
-Android *is* reachable in the outbound direction: Fenix ships the Web Share API
-unflagged, so the popup can hand the generated PNG to the Android share sheet.
-
-Platform differences are resolved by feature detection in `src/lib/caps.js`, not by
-user-agent sniffing, so the UI adapts as Firefox for Android gains APIs.
-
 ## Permissions
 
 `activeTab`, `contextMenus`, `storage` — all three are on Mozilla's no-warning list,
 so installing shows no permission prompt. Notably absent:
-
-- **`downloads`** — would add a warning, and was removed from Firefox for Android in
-  Fenix 79. Saving uses an object-URL `<a download>` instead.
-- **`tabs`** — unnecessary; `activeTab` covers reading the current tab's URL in
-  response to a user gesture.
-- **host permissions** — the extension makes no network requests at all.
 
 ## Layout
 
