@@ -36,14 +36,23 @@ if (!res.ok) {
   die(`AMO returned ${res.status}`);
 }
 
-// Read back rather than trusting the write.
+// Read back and diff rather than trusting the write. AMO rewrites some values on
+// the way in — it HTML-escapes markup in description, so tags sent here come back
+// as &lt;…&gt; and would render as literal text on the listing.
 const after = await fetchAddon(await createJwt());
-for (const key of Object.keys(listing)) {
-  const value = after[key];
-  const shown =
-    value && typeof value === "object" && value["en-US"]
-      ? `${value["en-US"].slice(0, 60).replace(/\n/g, " ")}…`
-      : JSON.stringify(value);
-  console.log(`  ${key}: ${shown}`);
+let altered = false;
+
+for (const [key, sent] of Object.entries(listing)) {
+  const stored = after[key];
+  const flat = (v) => (v && typeof v === "object" && "en-US" in v ? v["en-US"] : JSON.stringify(v));
+  const a = flat(sent);
+  const b = flat(stored);
+  console.log(`  ${key}: ${String(b).slice(0, 60).replace(/\n/g, " ")}…`);
+  if (a !== b) {
+    altered = true;
+    console.warn(`    ! AMO stored something different (sent ${a.length}, stored ${b.length} chars)`);
+  }
 }
-console.log("listing updated");
+
+console.log(altered ? "listing updated, but AMO altered a value — check it" : "listing updated");
+process.exit(altered ? 1 : 0);
