@@ -20,7 +20,19 @@
       "32": "icons/icon.svg",
       "48": "icons/icon.svg",
       "128": "icons/icon.svg"
-    }
+    },
+    "theme_icons": [
+      {
+        "light": "icons/icon-light.svg",
+        "dark": "icons/icon.svg",
+        "size": 16
+      },
+      {
+        "light": "icons/icon-light.svg",
+        "dark": "icons/icon.svg",
+        "size": 32
+      }
+    ]
   },
 
   "icons": {
