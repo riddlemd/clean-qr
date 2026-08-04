@@ -3,3 +3,6 @@ web-ext-artifacts/
 research/
 .DS_Store
 *.log
+
+# web-ext caches the last AMO upload here; machine-local, not shared state
+.amo-upload-uuid
