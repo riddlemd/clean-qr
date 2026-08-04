@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-export const manifest = require("../manifest.json");
+export const manifest = require("../../manifest.json");
 export const VERSION = manifest.version;
 export const ADDON_ID = manifest.browser_specific_settings.gecko.id;
 
@@ -17,7 +17,7 @@ export function die(msg) {
   process.exit(1);
 }
 
-export async function jwt() {
+export async function createJwt() {
   const cfgPath = path.join(os.homedir(), ".web-ext-config.mjs");
   if (!fs.existsSync(cfgPath)) die(`no credentials at ${cfgPath}`);
   const { default: cfg } = await import(cfgPath);
@@ -33,7 +33,7 @@ export async function jwt() {
   return `JWT ${head}.${body}.${sig}`;
 }
 
-export async function addon(auth) {
+export async function fetchAddon(auth) {
   const res = await fetch(
     `https://addons.mozilla.org/api/v5/addons/addon/${encodeURIComponent(ADDON_ID)}/`,
     { headers: { Authorization: auth } }
@@ -43,7 +43,7 @@ export async function addon(auth) {
   return res.json();
 }
 
-export async function version(auth, addonId, wanted = VERSION) {
+export async function fetchVersion(auth, addonId, wanted = VERSION) {
   const res = await fetch(
     `https://addons.mozilla.org/api/v5/addons/addon/${addonId}/versions/?filter=all_with_unlisted`,
     { headers: { Authorization: auth } }

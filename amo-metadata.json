@@ -1,5 +1,10 @@
 {
-  "categories": ["privacy-security"],
+  "categories": [
+    "privacy-security"
+  ],
+  "description": {
+    "en-US": "Generate a QR code for whatever you are looking at — the current page, a link, an image, or selected text — then scan it with your phone.\n\n<strong>It cleans the URL first.</strong> Tracking parameters like utm_source, fbclid and gclid are stripped before encoding, so the link your phone opens is the one you meant to share. The shorter URL also makes a sparser code that scans more easily.\n\n<strong>Tuned to actually scan.</strong> Long URLs produce dense codes that phone cameras struggle with off a screen. Clean QR lowers the error-correction level to keep the code readable instead of letting it get denser, and says so when it does rather than changing your setting silently.\n\n<strong>Entirely offline.</strong> No network requests, no host permissions, no analytics. The code is generated on your machine and never leaves it.\n\n<ul>\n<li>Right-click any page, link, image or selection (Firefox desktop)</li>\n<li>Keyboard shortcut: Alt+Shift+Q, which is Option+Shift+Q on macOS</li>\n<li>Copy the image, copy the cleaned URL, or save as PNG or SVG</li>\n<li>On Firefox for Android, share the code straight to the system share sheet</li>\n<li>Follows your light or dark theme — the code itself always stays dark-on-white, since inverted codes fail to scan</li>\n</ul>"
+  },
   "version": {
     "license": "MIT"
   }

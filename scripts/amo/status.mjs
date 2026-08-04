@@ -2,17 +2,17 @@
 // Reports where the current manifest version sits in AMO review.
 // Exits 0 only when it is approved, so it can gate: npm run status:amo && npm run release
 
-import { ADDON_ID, VERSION, addon, jwt, version } from "./amo.mjs";
+import { ADDON_ID, VERSION, fetchAddon, createJwt, fetchVersion } from "./client.mjs";
 
-const auth = await jwt();
-const record = await addon(auth);
+const auth = await createJwt();
+const record = await fetchAddon(auth);
 
 if (!record) {
   console.log(`${ADDON_ID} has never been submitted — run \`npm run submit:amo\``);
   process.exit(1);
 }
 
-const ver = await version(auth, record.id);
+const ver = await fetchVersion(auth, record.id);
 console.log(`add-on   ${record.slug}  (${record.status})`);
 
 if (!ver) {
