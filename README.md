@@ -1,7 +1,8 @@
 # Clean QR for Firefox
 
-Generates a QR code for the current page, a link, an image, or selected text. Runs
-entirely offline — nothing is ever sent to a server.
+Generates a QR code for the current page, a link, an image, or selected text — then
+strips the tracking parameters out of it first. Runs entirely offline; nothing is ever
+sent to a server.
 
 Works on Firefox desktop (macOS, Windows, Linux) and Firefox for Android.
 
@@ -11,7 +12,7 @@ Works on Firefox desktop (macOS, Windows, Linux) and Firefox for Android.
 
 | Popup | Context menu |
 | --- | --- |
-| <img src="docs/screenshots/desktop-popup.png" alt="Popup showing a QR code for the current page" width="360"> | <img src="docs/screenshots/desktop-menu.png" alt="Right-click menu with a Generate QR Code for Page entry" width="300"> |
+| <img src="docs/screenshots/desktop-popup.png" alt="Popup showing a QR code, the cleaned URL, and three icon buttons" width="340"> | <img src="docs/screenshots/desktop-menu.png" alt="Right-click menu with a Generate QR Code for Page entry" width="290"> |
 
 <img src="docs/screenshots/desktop-options.png" alt="Settings, shown in the Firefox Add-ons Manager" width="660">
 
@@ -19,53 +20,91 @@ Works on Firefox desktop (macOS, Windows, Linux) and Firefox for Android.
 
 | Popup | Browser menu | Settings |
 | --- | --- | --- |
-| <img src="docs/screenshots/android-popup.png" alt="Full-window QR code overlay on Android" width="220"> | <img src="docs/screenshots/android-menu.png" alt="Android browser menu with the extension listed" width="220"> | <img src="docs/screenshots/android-options.png" alt="Settings on Android" width="220"> |
+| <img src="docs/screenshots/android-popup.png" alt="Full-window QR code overlay on Android with four action buttons" width="220"> | <img src="docs/screenshots/android-menu.png" alt="Android browser menu with the extension listed" width="220"> | <img src="docs/screenshots/android-options.png" alt="Settings on Android" width="220"> |
 
-The popup is one shared UI: a 360px panel anchored to the toolbar button on desktop,
-and a full-window overlay on Android, where Web Share replaces the desktop clipboard
-actions. In every shot the encoded URL is `https://example.com/?id=42` — the page was
-loaded with a `utm_source` parameter that tracking-stripping removed before encoding.
+One shared UI: a 360px panel anchored to the toolbar button on desktop, a full-window
+overlay on Android. Android gains a Share button because Fenix ships the Web Share API;
+desktop Firefox does not, so it is simply absent rather than disabled. In every shot the
+page was loaded with `?utm_source=newsletter&id=42` and the code encodes
+`https://example.com/?id=42`.
+
+## What it does
+
+**Cleans the URL first.** `utm_*`, `fbclid`, `gclid`, `mc_*` and around forty others are
+removed before encoding, so the link that opens on the other device is the one you meant
+to share. A shorter URL also produces a sparser code, which scans more easily.
+
+**Types what you selected.** Select a phone number, email address or coordinate pair and
+the code becomes `tel:`, `mailto:` or `geo:` — something the scanning phone offers to act
+on rather than inert text. Detection is deliberately reluctant: prices, dates, version
+numbers, ISBNs and part numbers are all left alone, because a wrong guess is worse than
+plain text. The raw words are always offered alongside, never replaced.
+
+**Links to the passage, not just the page.** Selecting text also offers a
+[text fragment](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments)
+link that scrolls the reader to that passage. Long selections encode only their first and
+last few words, which matches the same text while keeping the code far sparser.
+
+**Keeps the code scannable.** Error correction is lowered automatically rather than
+letting a long URL produce a dense code a phone camera struggles with off a screen — and
+the footer says so instead of changing your setting silently.
 
 ## Install for development
 
 ```bash
 npm install
-npm start          # launches Firefox with the extension loaded
+npm start                            # Firefox with the extension loaded
 npm run start:android -- --adb-device <id>
-npm run lint       # web-ext lint
-npm test           # unit tests for encoding and URL handling
+npm test                             # unit tests, no browser needed
+npm run lint                         # web-ext lint
+npm run icons                        # regenerate icon assets (needs librsvg)
 ```
 
-## How it works
+## Surfaces
 
-| Surface | Desktop | Android |
+| | Desktop | Android |
 | --- | --- | --- |
 | Toolbar button + popup | yes | yes |
-| Context menu (page/link/image/selection) | yes | no |
+| Context menu (page/link/image/selection/frame) | yes | no — Fenix has no `menus` API |
 | Windows/Linux shortcut (`Alt+Shift+Q`) | yes | no |
 | macOS shortcut (`Option+Shift+Q`, ⌥⇧Q) | yes | no |
-| Share to the OS share sheet | no | yes |
+| Share to the OS share sheet | no — no Web Share | yes |
+| Copy image to clipboard | yes | yes |
+
+Platform differences are resolved by feature detection in `src/lib/caps.js`, not by
+user-agent sniffing, so the UI adapts as Firefox for Android gains APIs.
 
 ## Permissions
 
 | Permission | Used for |
 | --- | --- |
-| `activeTab` | Reading the current tab's URL when you invoke the extension |
-| `menus` | The right-click entries for pages, links, images and selections |
+| `activeTab` | Reading the current tab's URL and title when you invoke the extension |
+| `menus` | The right-click entries |
 | `storage` | Persisting your settings |
-| `clipboardWrite` | Copy image / Copy URL, and auto-copy on open |
+| `clipboardWrite` | Copy image, copy URL, copy Markdown, and auto-copy on open |
 
-`clipboardWrite` is the only one that prompts. It is required rather than optional:
-clipboard writes from an extension page need transient user activation without it, so
-auto-copy-on-open — which fires with no click behind it — silently fails.
+`clipboardWrite` is the only one that prompts on install. It is required rather than
+optional: clipboard writes from an extension page need transient user activation without
+it, so auto-copy-on-open — which fires with no click behind it — would silently fail.
 
 Notably absent:
 
 - **`downloads`** — would add a warning, and was removed from Firefox for Android in
   Fenix 79. Saving uses an object-URL `<a download>` instead.
-- **`tabs`** — unnecessary; `activeTab` covers reading the current tab's URL in
-  response to a user gesture.
-- **host permissions** — the extension makes no network requests at all.
+- **`scripting`** and **host permissions** — nothing is ever read from the page. The
+  context menu already provides the selection and the page URL.
+- **network access** — there is none. The QR code is generated on your machine.
+
+## Settings
+
+Beyond theme, size and error correction, the options page covers which context-menu
+entries appear, which extra popup buttons are shown, how a selection is offered by
+default, text-fragment precision, extra tracking parameters of your own, whether recent
+codes are remembered, and the file-naming scheme.
+
+**Recent codes is off by default.** It records what you encoded, which is browsing history
+by another name — so it is opt-in, capped, cleared when you switch it off, and never
+written from a private window.
 
 ## Layout
 
@@ -76,41 +115,53 @@ src/
   popup/              the single UI, shared by desktop and Android
   options/            settings
   lib/
-    qr.js             encoding + automatic error-correction downgrade
-    render.js         SVG for display, canvas for export
-    target.js         URL normalization, tracking-parameter stripping
+    qr.js             encoding, error-correction downgrade, density ceilings
+    render.js         SVG for display, canvas for export, data URIs
+    target.js         URL cleaning, selection typing, text fragments
     caps.js           runtime feature detection
     theme.js          OS theme by default, explicit override
-    settings.js       defaults and storage
+    settings.js       defaults and validation
     pending.js        context-menu → popup hand-off
+    history.js        recent codes, when enabled
   vendor/qrcode.mjs   qrcode-generator 2.0.4, unmodified (MIT)
-test/                 unit tests for encoding and URL handling
+test/                 unit tests; stub-browser.js fakes the browser.* APIs
+scripts/              release tooling, not shipped in the XPI
 ```
 
 **No build step.** `qrcode-generator` 2.0.4 ships zero-dependency native ESM, so the
-extension ships as plain unbundled, unminified modules. This is deliberate: AMO
-requires full source submission and byte-exact build reproduction for any minified or
-bundled extension, and shipping readable source avoids that entirely.
+extension ships as plain unbundled, unminified modules. This is deliberate: AMO requires
+full source submission and byte-exact build reproduction for any minified or bundled
+extension, and shipping readable source avoids that entirely.
+
+The one modification is at runtime: the vendored library truncates each UTF-16 code unit
+to a single byte, so `qr.js` replaces its byte converter with `TextEncoder`. Without that,
+any non-ASCII selection encodes to mojibake.
+
+## Releasing
+
+```bash
+npm run send-for-review          # bump, submit to AMO, commit, tag, push
+npm run status:amo               # where the submitted version sits in review
+npm run release                  # signed XPI -> GitHub Release, once approved
+npm run push-listing:amo         # push amo-metadata.json to the live listing
+```
+
+Submission runs before the commit deliberately: AMO rejects for reasons that leave the
+version unused, and committing first would bury a version number that is still free.
 
 ## Theme
 
-Follows the operating system's light/dark setting by default. Settings offers
-**Auto / Light / Dark**; an explicit choice overrides the OS in both directions.
+Follows the operating system's light/dark setting by default; Settings offers **Auto /
+Light / Dark**, and an explicit choice overrides the OS in both directions. The toolbar
+icon ships in two inks so it stays legible on a dark toolbar.
 
 The QR code itself always renders dark-on-white regardless of theme — an inverted or
-low-contrast code is a well-known scanner-failure mode, so the theme is not permitted
-to reach it.
-
-## Encoding
-
-Defaults to error-correction level M. If a URL would push the code past version 12 —
-roughly where on-screen scanning from a phone starts to fail — the error-correction
-level is automatically lowered to buy back capacity, and the popup footer shows the
-change rather than making it silently.
+low-contrast code is a well-known scanner-failure mode, so the theme is not permitted to
+reach it.
 
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
 
-The vendored QR library, `qrcode-generator` by Kazuhiko Arase, is separately MIT
-licensed and redistributed unmodified; its notice is at `src/vendor/LICENSE`.
+The vendored QR library, `qrcode-generator` by Kazuhiko Arase, is separately MIT licensed
+and redistributed unmodified; its notice is at `src/vendor/LICENSE`.
