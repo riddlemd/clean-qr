@@ -91,7 +91,7 @@ async function main() {
   renderPreview();
 
   const { version } = browser.runtime.getManifest();
-  document.getElementById("version").textContent = `QR Code for Firefox · v${version}`;
+  document.getElementById("version").textContent = `Clean QR for Firefox · v${version}`;
 }
 
 main();

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "QR Code",
+  "name": "Clean QR",
   "version": "1.0.0",
   "description": "Generate a QR code for the current page, a link, an image, or selected text. Works entirely offline.",
   "author": "Michael Riddle",
@@ -47,14 +47,14 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "qr@riddlemd",
+      "id": "clean-qr@riddlemd",
       "strict_min_version": "115.0",
       "data_collection_permissions": {
         "required": ["none"]
       }
     },
     "gecko_android": {
-      "strict_min_version": "115.0"
+      "strict_min_version": "120.0"
     }
   }
 }

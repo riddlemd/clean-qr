@@ -1,4 +1,4 @@
-# QR Code for Firefox
+# Clean QR for Firefox
 
 Generates a QR code for the current page, a link, an image, or selected text. Runs
 entirely offline — nothing is ever sent to a server.
