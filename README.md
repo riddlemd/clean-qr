@@ -47,8 +47,24 @@ npm test           # unit tests for encoding and URL handling
 
 ## Permissions
 
-`activeTab`, `contextMenus`, `storage` — all three are on Mozilla's no-warning list,
-so installing shows no permission prompt.
+| Permission | Used for | Install warning |
+| --- | --- | --- |
+| `activeTab` | Reading the current tab's URL when you invoke the extension | none |
+| `menus` | The right-click entries for pages, links, images and selections | none |
+| `storage` | Persisting your settings | none |
+| `clipboardWrite` | Copy image / Copy URL, and auto-copy on open | yes — "Input data to the clipboard" |
+
+`clipboardWrite` is the only one that prompts. It is required rather than optional:
+clipboard writes from an extension page need transient user activation without it, so
+auto-copy-on-open — which fires with no click behind it — silently fails.
+
+Notably absent:
+
+- **`downloads`** — would add a warning, and was removed from Firefox for Android in
+  Fenix 79. Saving uses an object-URL `<a download>` instead.
+- **`tabs`** — unnecessary; `activeTab` covers reading the current tab's URL in
+  response to a user gesture.
+- **host permissions** — the extension makes no network requests at all.
 
 ## Layout
 
