@@ -15,10 +15,12 @@ test("targetFor reads the field that matches the menu item", () => {
     selectionText: "picked text",
     pageUrl: "https://page.example",
   };
-  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-link" }), { text: "https://link.example", kind: "link" });
-  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-image" }), { text: "https://img.example/i.png", kind: "image" });
-  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-selection" }), { text: "picked text", kind: "selection" });
-  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-page" }), { text: "https://page.example", kind: "page" });
+  const page = "https://page.example";
+  // pageUrl rides along on every kind so a selection can be turned into a link to itself.
+  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-link" }), { text: "https://link.example", kind: "link", pageUrl: page });
+  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-image" }), { text: "https://img.example/i.png", kind: "image", pageUrl: page });
+  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-selection" }), { text: "picked text", kind: "selection", pageUrl: page });
+  assert.deepEqual(targetFor({ ...info, menuItemId: "qr-page" }), { text: page, kind: "page", pageUrl: page });
   assert.equal(targetFor({ ...info, menuItemId: "someone-elses-item" }), null);
 });
 

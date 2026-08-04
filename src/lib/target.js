@@ -17,6 +17,7 @@ export const TARGET_KINDS = Object.freeze({
   LINK: "link",
   IMAGE: "image",
   SELECTION: "selection",
+  SELECTION_LINK: "selectionLink",
 });
 
 export const KIND_LABELS = Object.freeze({
@@ -24,7 +25,42 @@ export const KIND_LABELS = Object.freeze({
   link: "Link",
   image: "Image",
   selection: "Selection",
+  selectionLink: "Link to selection",
 });
+
+// Words taken from each end when a selection is too long to encode whole.
+const FRAGMENT_EDGE_WORDS = 5;
+
+// A text fragment (#:~:text=) scrolls the reader to the selected passage without
+// the page needing an id to anchor to. The receiving browser resolves it, so the
+// version generating the code is irrelevant — Firefox reads them from 131,
+// Chrome and Safari long before that, and anything older just ignores the
+// directive and loads the page normally.
+//
+// Long selections use the start,end form: it matches the same passage while
+// encoding only the two ends, which keeps the QR far sparser.
+export function textFragmentUrl(pageUrl, selection) {
+  const text = (selection ?? "").replace(/\s+/g, " ").trim();
+  if (!text || !pageUrl) return null;
+
+  let url;
+  try {
+    url = new URL(pageUrl);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+
+  const words = text.split(" ");
+  const directive =
+    words.length <= FRAGMENT_EDGE_WORDS * 2
+      ? encodeURIComponent(text)
+      : `${encodeURIComponent(words.slice(0, FRAGMENT_EDGE_WORDS).join(" "))},` +
+        `${encodeURIComponent(words.slice(-FRAGMENT_EDGE_WORDS).join(" "))}`;
+
+  // Any existing fragment is replaced — two directives on one URL don't combine.
+  return `${url.href.split("#")[0]}#:~:text=${directive}`;
+}
 
 function isTracking(name) {
   const key = name.toLowerCase();

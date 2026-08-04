@@ -34,13 +34,13 @@ function syncMenus() {
 
 function targetFor(info) {
   const item = ITEM_BY_ID.get(info.menuItemId);
-  return item ? { text: info[item.field], kind: item.kind } : null;
+  return item ? { text: info[item.field], kind: item.kind, pageUrl: info.pageUrl } : null;
 }
 
 // openPopup() is gesture-gated and has been unreliable across versions, so the
 // tab fallback is load-bearing rather than defensive.
 async function showQr(target) {
-  await setPending(target.text, target.kind);
+  await setPending(target.text, target.kind, target.pageUrl);
   try {
     if (typeof browser.action?.openPopup !== "function") throw new Error("openPopup unavailable");
     await browser.action.openPopup();

@@ -8,8 +8,10 @@ const area = () => browser.storage.session;
 // user right-clicked long ago.
 const MAX_AGE_MS = 60_000;
 
-export async function setPending(text, kind) {
-  await area().set({ [KEY]: { text, kind, ts: Date.now() } });
+// pageUrl rides along so a selection can also be offered as a link into the page;
+// the popup cannot recover it later, since by then the active tab may be its own.
+export async function setPending(text, kind, pageUrl) {
+  await area().set({ [KEY]: { text, kind, pageUrl, ts: Date.now() } });
 }
 
 export async function takePending() {

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import qrcode from "../src/vendor/qrcode.mjs";
 import { encode, SOFT_MAX_VERSION } from "../src/lib/qr.js";
-import { stripTracking, truncate, filenameFor, prepare } from "../src/lib/target.js";
+import { stripTracking, textFragmentUrl, truncate, filenameFor, prepare } from "../src/lib/target.js";
 
 test("encodes a short URL at the requested level", () => {
   const code = encode("https://example.com", "M");
@@ -145,6 +145,36 @@ test("prepare honours the strip setting", () => {
   assert.equal(prepare(url, { stripTracking: false }), url);
   assert.equal(prepare(undefined), "");
   assert.equal(prepare("  \n\t  "), "");
+});
+
+test("short selections become a whole text fragment", () => {
+  assert.equal(
+    textFragmentUrl("https://example.com/p", "the quick brown fox"),
+    "https://example.com/p#:~:text=the%20quick%20brown%20fox"
+  );
+});
+
+test("long selections use the start,end form", () => {
+  const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet", "kilo"];
+  const out = textFragmentUrl("https://example.com/p", words.join(" "));
+  assert.equal(out, "https://example.com/p#:~:text=alpha%20bravo%20charlie%20delta%20echo,golf%20hotel%20india%20juliet%20kilo");
+  // The middle word is absent — that is the whole point of the compact form.
+  assert.ok(!out.includes("foxtrot"));
+});
+
+test("text fragments collapse whitespace and replace any existing fragment", () => {
+  assert.equal(
+    textFragmentUrl("https://example.com/p#old", "  spread\n  over   lines\t"),
+    "https://example.com/p#:~:text=spread%20over%20lines"
+  );
+});
+
+test("text fragments are refused where they cannot work", () => {
+  assert.equal(textFragmentUrl("https://example.com/p", "   "), null);
+  assert.equal(textFragmentUrl("https://example.com/p", undefined), null);
+  assert.equal(textFragmentUrl("not a url", "text"), null);
+  assert.equal(textFragmentUrl("mailto:someone@example.com", "text"), null);
+  assert.equal(textFragmentUrl(undefined, "text"), null);
 });
 
 test("truncate keeps both ends and respects the budget", () => {

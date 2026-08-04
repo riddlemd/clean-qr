@@ -4,7 +4,7 @@ import { takePending } from "../lib/pending.js";
 import { caps } from "../lib/caps.js";
 import { encode } from "../lib/qr.js";
 import { toSvgElement, toPngBlob, toSvgBlob } from "../lib/render.js";
-import { prepare, truncate, filenameFor, KIND_LABELS, TARGET_KINDS } from "../lib/target.js";
+import { prepare, truncate, filenameFor, textFragmentUrl, KIND_LABELS, TARGET_KINDS } from "../lib/target.js";
 
 const el = {
   plate: document.getElementById("plate"),
@@ -52,7 +52,16 @@ async function activeTabUrl() {
 async function collectSources() {
   const found = [];
   const [pending, url] = await Promise.all([takePending(), activeTabUrl()]);
-  if (pending?.text) found.push({ kind: pending.kind, text: pending.text });
+
+  if (pending?.text) {
+    // Sharing a passage almost always means sharing where it is, so the link leads
+    // and is selected by default. The raw words stay one tap away for the cases
+    // where they are the point — a wifi key, an address, a code.
+    const fragment =
+      pending.kind === TARGET_KINDS.SELECTION ? textFragmentUrl(pending.pageUrl, pending.text) : null;
+    if (fragment) found.push({ kind: TARGET_KINDS.SELECTION_LINK, text: fragment });
+    found.push({ kind: pending.kind, text: pending.text });
+  }
 
   // In the tab fallback the active tab is this popup itself — offering its
   // moz-extension:// URL as a "Page URL" source would encode nonsense.
