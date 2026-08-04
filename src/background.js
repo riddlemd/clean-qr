@@ -66,3 +66,6 @@ syncMenus();
 onSettingsChanged((_changes, keys) => {
   if (keys.includes("contextMenus")) syncMenus();
 });
+
+// Exported for the test suite; nothing imports this module at runtime.
+export { targetFor, syncMenus };

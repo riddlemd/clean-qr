@@ -68,7 +68,12 @@ test("flags dense when nothing fits under the ceiling", () => {
 });
 
 test("throws past the largest possible code", () => {
-  assert.throws(() => encode("a".repeat(20000), "M"), /Too long/);
+  // Error instance matters: the vendor throws raw strings, and the popup's
+  // error path reads .message — encode must always translate.
+  assert.throws(
+    () => encode("a".repeat(20000), "M"),
+    (e) => e instanceof Error && /Too long/.test(e.message)
+  );
 });
 
 test("throws on empty input", () => {
@@ -111,6 +116,20 @@ test("keeps parameters that merely resemble tracking names", () => {
   assert.equal(stripTracking("https://example.com/?ref=abc"), "https://example.com/?ref=abc");
 });
 
+test("strips tracking parameters case-insensitively", () => {
+  assert.equal(
+    stripTracking("https://example.com/?UTM_SOURCE=x&FbClId=y&id=1"),
+    "https://example.com/?id=1"
+  );
+});
+
+test("keeps the fragment through stripping", () => {
+  assert.equal(
+    stripTracking("https://example.com/p?utm_source=x#section-2"),
+    "https://example.com/p#section-2"
+  );
+});
+
 test("preserves the encoding of surviving parameters", () => {
   // URLSearchParams would rewrite these to q=a+b%3Ac and flag=.
   assert.equal(
@@ -125,6 +144,7 @@ test("prepare honours the strip setting", () => {
   assert.equal(prepare(` ${url} `, { stripTracking: true }), "https://example.com/");
   assert.equal(prepare(url, { stripTracking: false }), url);
   assert.equal(prepare(undefined), "");
+  assert.equal(prepare("  \n\t  "), "");
 });
 
 test("truncate keeps both ends and respects the budget", () => {
