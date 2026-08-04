@@ -40,19 +40,20 @@ npm test           # unit tests for encoding and URL handling
 
 | Surface | Desktop | Android |
 | --- | --- | --- |
-| Toolbar button + popup | yes | yes (full-window overlay) |
-| Context menu (page/link/image/selection) | yes | no — the `menus` API doesn't exist on Fenix |
-| Keyboard shortcut (`Ctrl/Cmd+Shift+Q`) | yes | no |
-| Share to the OS share sheet | no — Web Share is flag-gated off | yes, via `navigator.share()` |
+| Toolbar button + popup | yes | yes |
+| Context menu (page/link/image/selection) | yes | no |
+| Windows/Linux shortcut (`Alt+Shift+Q`) | yes | no |
+| macOS shortcut (`Option+Shift+Q`, ⌥⇧Q) | yes | no |
+| Share to the OS share sheet | no | yes |
 
 ## Permissions
 
-| Permission | Used for | Install warning |
-| --- | --- | --- |
-| `activeTab` | Reading the current tab's URL when you invoke the extension | none |
-| `menus` | The right-click entries for pages, links, images and selections | none |
-| `storage` | Persisting your settings | none |
-| `clipboardWrite` | Copy image / Copy URL, and auto-copy on open | yes — "Input data to the clipboard" |
+| Permission | Used for |
+| --- | --- |
+| `activeTab` | Reading the current tab's URL when you invoke the extension |
+| `menus` | The right-click entries for pages, links, images and selections |
+| `storage` | Persisting your settings |
+| `clipboardWrite` | Copy image / Copy URL, and auto-copy on open |
 
 `clipboardWrite` is the only one that prompts. It is required rather than optional:
 clipboard writes from an extension page need transient user activation without it, so
