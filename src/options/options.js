@@ -8,6 +8,7 @@ const PREVIEW_URL = "https://example.com/preview";
 const PREVIEW_MAX = 132; // keeps Large from overflowing the settings row
 
 let settings;
+const previewEl = document.getElementById("preview");
 
 const cast = (element, value) =>
   element.dataset.type === "number" ? Number(value) : value;
@@ -26,12 +27,13 @@ function paintToggle(button) {
 }
 
 function renderPreview() {
-  const preview = document.getElementById("preview");
   try {
     const code = encode(PREVIEW_URL, settings.ecLevel);
-    preview.replaceChildren(toSvgElement(code, { size: Math.min(settings.size, PREVIEW_MAX) }));
+    previewEl.replaceChildren(
+      toSvgElement(code, { size: Math.min(settings.size, PREVIEW_MAX), label: "Example QR code" })
+    );
   } catch {
-    preview.replaceChildren();
+    previewEl.replaceChildren();
   }
 }
 
@@ -39,7 +41,8 @@ async function update(key, value) {
   settings = { ...settings, [key]: value };
   if (key === "theme") applyTheme(value); // repaint before the storage round-trip
   await setSetting(key, value);
-  renderPreview();
+  // Only these two shape the preview; re-encoding for the rest is thrown away.
+  if (key === "size" || key === "ecLevel") renderPreview();
 }
 
 function bind() {
@@ -79,7 +82,8 @@ function markUnavailable() {
 }
 
 async function main() {
-  const [, loaded] = await Promise.all([initTheme(), getSettings()]);
+  const settingsPromise = getSettings();
+  const [, loaded] = await Promise.all([initTheme(settingsPromise), settingsPromise]);
   settings = loaded;
 
   bind();

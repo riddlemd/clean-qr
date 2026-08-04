@@ -1,8 +1,7 @@
 /* [data-theme] out-specifies the media query in both directions, so an explicit
    Light choice still wins on a dark-mode OS. */
-:root {
-  color-scheme: light dark;
-
+:root,
+:root[data-theme="light"] {
   --bg: #ffffff;
   --surface: #f9f9fa;
   --surface-raised: #ffffff;
@@ -32,6 +31,9 @@
   --focus: #0060df;
   --shadow: 0 2px 8px rgba(12, 12, 13, 0.12);
 }
+
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -66,33 +68,8 @@
   }
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #ffffff;
-  --surface: #f9f9fa;
-  --surface-raised: #ffffff;
-  --border: #d7d7db;
-  --border-strong: #c2c2c6;
-  --text: #0c0c0d;
-  --text-muted: #5b5b66;
-  --text-faint: #8f8f9d;
-  --accent: #0060df;
-  --accent-hover: #0250bb;
-  --accent-active: #054096;
-  --accent-text: #ffffff;
-  --btn-bg: #f0f0f4;
-  --btn-bg-hover: #e0e0e6;
-  --btn-bg-active: #cfcfd8;
-  --danger-bg: #ffe8e8;
-  --danger-border: #f3a7a7;
-  --danger-text: #8f1d1d;
-  --warn-bg: #fff4dd;
-  --warn-border: #f0c674;
-  --warn-text: #7a5200;
-  --focus: #0060df;
-  --shadow: 0 2px 8px rgba(12, 12, 13, 0.12);
-}
-
+/* Kept in sync with the media block above by hand — light-dark() would collapse
+   the pair but needs Firefox 120, above the current support floor. */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #1c1b22;
@@ -133,7 +110,6 @@ html.theme-pending body {
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  html.theme-pending body { animation: theme-reveal 0s 400ms forwards !important; }
 }
 
 * { box-sizing: border-box; }
@@ -160,4 +136,27 @@ button {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--btn-bg);
+  border-radius: 6px;
+}
+
+.segmented button {
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.segmented button:hover:not(.selected) { background: var(--btn-bg-hover); }
+
+.segmented button.selected {
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow);
 }

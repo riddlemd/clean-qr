@@ -1,5 +1,9 @@
 import qrcode from "../vendor/qrcode.mjs";
 
+// The vendor default truncates each UTF-16 code unit to one byte, turning
+// anything past U+00FF into mojibake. Scanners expect UTF-8 in byte mode.
+qrcode.stringToBytes = (s) => Array.from(new TextEncoder().encode(s));
+
 // Ordered denser to sparser: downgrading slices toward L to buy back capacity.
 const EC_ORDER = ["H", "Q", "M", "L"];
 

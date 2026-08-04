@@ -20,7 +20,7 @@ const el = {
 let settings;
 let sources = [];
 let selected = 0;
-let current = null; // { code, text, pngBlob }
+let current = null;
 
 function toast(message) {
   el.toast.textContent = message;
@@ -36,6 +36,7 @@ function showNotice(message, kind = "warn") {
 }
 
 function clearNotice() {
+  el.notice.className = "notice";
   el.notice.hidden = true;
 }
 
@@ -50,16 +51,18 @@ async function activeTabUrl() {
 
 async function collectSources() {
   const found = [];
-  const pending = await takePending();
+  const [pending, url] = await Promise.all([takePending(), activeTabUrl()]);
   if (pending?.text) found.push({ kind: pending.kind, text: pending.text });
 
-  const url = await activeTabUrl();
-  if (url && !found.some((s) => s.kind === TARGET_KINDS.PAGE)) {
+  // In the tab fallback the active tab is this popup itself — offering its
+  // moz-extension:// URL as a "Page URL" source would encode nonsense.
+  if (url && !url.startsWith("moz-extension:") && !found.some((s) => s.kind === TARGET_KINDS.PAGE)) {
     found.push({ kind: TARGET_KINDS.PAGE, text: url });
   }
   return found;
 }
 
+// Built once; selection changes repaint in place so the clicked button keeps focus.
 function renderSources() {
   el.sources.replaceChildren();
   if (sources.length < 2) {
@@ -71,15 +74,22 @@ function renderSources() {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = KIND_LABELS[source.kind] ?? source.kind;
-    button.className = index === selected ? "selected" : "";
-    button.setAttribute("aria-pressed", String(index === selected));
     button.addEventListener("click", () => {
       if (index === selected) return;
       selected = index;
-      renderSources();
+      paintSources();
       renderCode();
     });
     el.sources.appendChild(button);
+  });
+  paintSources();
+}
+
+function paintSources() {
+  [...el.sources.children].forEach((button, index) => {
+    const on = index === selected;
+    button.className = on ? "selected" : "";
+    button.setAttribute("aria-pressed", String(on));
   });
 }
 
@@ -101,13 +111,15 @@ async function renderCode() {
   } catch (error) {
     current = null;
     el.plate.replaceChildren();
+    el.target.textContent = "";
+    el.target.title = "";
     el.meta.textContent = "";
     showNotice(error.message, "error");
     renderActions();
     return;
   }
 
-  el.plate.replaceChildren(toSvgElement(code, { size: settings.size }));
+  el.plate.replaceChildren(toSvgElement(code, { size: settings.size, label: `QR code for ${truncate(text)}` }));
   el.target.textContent = truncate(text);
   el.target.title = text;
   renderMeta(code);
@@ -125,7 +137,7 @@ async function renderCode() {
     const blob = await toPngBlob(code, { size: settings.size, scale: settings.pngScale });
     if (current?.code === code) {
       current.pngBlob = blob;
-      renderActions();
+      enableBlobActions();
       if (settings.autoCopy && caps.clipboardImage) copyImage({ silent: true });
     }
   } catch {
@@ -180,6 +192,8 @@ function share() {
   navigator.share(data).catch(() => {});
 }
 
+// Rebuilt only when the current code changes; the PNG-ready transition just
+// flips `disabled` so a button the user already focused isn't destroyed.
 function renderActions() {
   el.actions.replaceChildren();
   if (!current) return;
@@ -207,9 +221,18 @@ function renderActions() {
     button.type = "button";
     button.textContent = label;
     if (primary) button.className = "primary";
-    button.disabled = Boolean(needsBlob) && !ready;
+    if (needsBlob) {
+      button.dataset.needsBlob = "";
+      button.disabled = !ready;
+    }
     button.addEventListener("click", onClick);
     el.actions.appendChild(button);
+  }
+}
+
+function enableBlobActions() {
+  for (const button of el.actions.querySelectorAll("button[data-needs-blob]")) {
+    button.disabled = false;
   }
 }
 
@@ -219,8 +242,12 @@ el.settings.addEventListener("click", () => {
 });
 
 async function main() {
-  const [, loaded] = await Promise.all([initTheme(), getSettings()]);
+  const settingsPromise = getSettings();
+  const [, loaded] = await Promise.all([initTheme(settingsPromise), settingsPromise]);
   settings = loaded;
+
+  // Sizes the plate before the QR lands so the spinner→code swap doesn't reflow.
+  document.documentElement.style.setProperty("--qr-size", `${settings.size}px`);
 
   sources = await collectSources();
   if (!sources.length) {
@@ -233,4 +260,8 @@ async function main() {
   await renderCode();
 }
 
-main();
+main().catch(() => {
+  // A storage failure here would otherwise leave the spinner running forever.
+  el.plate.replaceChildren();
+  showNotice("Something went wrong while loading. Try reopening the popup.", "error");
+});

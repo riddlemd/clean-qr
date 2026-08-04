@@ -68,33 +68,12 @@ body {
 
 .row.unavailable { opacity: 0.55; }
 
-.segmented {
-  display: flex;
-  flex: none;
-  gap: 2px;
-  padding: 2px;
-  background: var(--btn-bg);
-  border-radius: 6px;
-}
+.segmented { flex: none; }
 
 .segmented button {
   min-width: 56px;
   padding: 5px 11px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--text-muted);
 }
-
-.segmented button:hover:not(.selected):not(:disabled) { background: var(--btn-bg-hover); }
-
-.segmented button.selected {
-  background: var(--surface-raised);
-  color: var(--text);
-  font-weight: 600;
-  box-shadow: var(--shadow);
-}
-
-.segmented button:disabled { cursor: default; }
 
 select {
   flex: none;

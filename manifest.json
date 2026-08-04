@@ -5,7 +5,7 @@
   "description": "Generate a QR code for the current page, a link, an image, or selected text. Works entirely offline.",
   "author": "Michael Riddle",
 
-  "permissions": ["activeTab", "contextMenus", "storage"],
+  "permissions": ["activeTab", "menus", "storage", "clipboardWrite"],
 
   "background": {
     "scripts": ["src/background.js"],
@@ -39,8 +39,7 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Q",
-        "mac": "Command+Shift+Q"
+        "default": "Alt+Shift+Q"
       },
       "description": "Generate QR Code for the current page"
     }

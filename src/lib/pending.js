@@ -16,6 +16,8 @@ export async function takePending() {
   const store = area();
   const { [KEY]: record } = await store.get(KEY);
   if (!record) return null;
-  await store.remove(KEY);
+  // Unawaited: the record is in hand and removal is cleanup, not a dependency —
+  // awaiting it puts a storage round-trip on the popup's first-paint path.
+  store.remove(KEY).catch(() => {});
   return Date.now() - record.ts > MAX_AGE_MS ? null : record;
 }

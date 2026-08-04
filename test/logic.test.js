@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import qrcode from "../src/vendor/qrcode.mjs";
 import { encode, SOFT_MAX_VERSION } from "../src/lib/qr.js";
-import { stripTracking, truncate, filenameFor, isUrl, prepare } from "../src/lib/target.js";
+import { stripTracking, truncate, filenameFor, prepare } from "../src/lib/target.js";
 
 test("encodes a short URL at the requested level", () => {
   const code = encode("https://example.com", "M");
@@ -78,6 +79,16 @@ test("throws on an unknown EC level", () => {
   assert.throws(() => encode("https://example.com", "Z"), /Unknown error correction/);
 });
 
+// Importing qr.js installs the UTF-8 converter on the vendor module; the vendor
+// default truncates each UTF-16 code unit to one byte.
+test("byte mode encodes text as UTF-8", () => {
+  for (const text of ["café", "日本語", "😀"]) {
+    assert.deepEqual(qrcode.stringToBytes(text), Array.from(new TextEncoder().encode(text)));
+  }
+  const code = encode("https://example.com/日本語のページ", "M");
+  assert.equal(code.count, code.matrix.length);
+});
+
 test("strips exact and prefixed tracking parameters", () => {
   assert.equal(
     stripTracking("https://example.com/p?utm_source=x&utm_medium=y&id=7&fbclid=abc"),
@@ -100,18 +111,20 @@ test("keeps parameters that merely resemble tracking names", () => {
   assert.equal(stripTracking("https://example.com/?ref=abc"), "https://example.com/?ref=abc");
 });
 
+test("preserves the encoding of surviving parameters", () => {
+  // URLSearchParams would rewrite these to q=a+b%3Ac and flag=.
+  assert.equal(
+    stripTracking("https://example.com/s?q=a%20b%3Ac&utm_source=x"),
+    "https://example.com/s?q=a%20b%3Ac"
+  );
+  assert.equal(stripTracking("https://example.com/s?flag&utm_source=x"), "https://example.com/s?flag");
+});
+
 test("prepare honours the strip setting", () => {
   const url = "https://example.com/?utm_source=x";
   assert.equal(prepare(` ${url} `, { stripTracking: true }), "https://example.com/");
   assert.equal(prepare(url, { stripTracking: false }), url);
   assert.equal(prepare(undefined), "");
-});
-
-test("isUrl accepts only http(s)", () => {
-  assert.equal(isUrl("https://example.com"), true);
-  assert.equal(isUrl("http://example.com"), true);
-  assert.equal(isUrl("ftp://example.com"), false);
-  assert.equal(isUrl("hello"), false);
 });
 
 test("truncate keeps both ends and respects the budget", () => {
@@ -126,8 +139,20 @@ test("truncate keeps both ends and respects the budget", () => {
   assert.ok(out.endsWith("tail"));
 });
 
+test("truncate never splits a surrogate pair", () => {
+  const out = truncate("a".repeat(30) + "😀".repeat(20), 40);
+  assert.ok([...out].every((c) => !/^[\uD800-\uDFFF]$/.test(c)), "lone surrogate in output");
+  assert.equal([...out].length, 40);
+});
+
 test("filenames derive from the host and stay filesystem-safe", () => {
   assert.equal(filenameFor("https://www.example.com/a/b", "png"), "qr-example.com.png");
   assert.equal(filenameFor("some selected text", "svg"), "qr-code.svg");
   assert.ok(!/[^a-z0-9.\-]/i.test(filenameFor("https://ex ample.com/", "png")));
+});
+
+test("hostname-less URLs keep the generic filename", () => {
+  assert.equal(filenameFor("mailto:someone@example.com", "png"), "qr-code.png");
+  assert.equal(filenameFor("about:blank", "png"), "qr-code.png");
+  assert.equal(filenameFor("data:text/plain,hi", "svg"), "qr-code.svg");
 });

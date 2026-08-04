@@ -4,39 +4,37 @@ import { setPending } from "./lib/pending.js";
 import { TARGET_KINDS } from "./lib/target.js";
 
 const MENU_ITEMS = [
-  { id: "qr-link", title: "Generate QR Code for Link", contexts: ["link"], kind: TARGET_KINDS.LINK },
-  { id: "qr-image", title: "Generate QR Code for Image", contexts: ["image"], kind: TARGET_KINDS.IMAGE },
-  { id: "qr-selection", title: "Generate QR Code for Selection", contexts: ["selection"], kind: TARGET_KINDS.SELECTION },
-  { id: "qr-page", title: "Generate QR Code for Page", contexts: ["page"], kind: TARGET_KINDS.PAGE },
+  { id: "qr-link", title: "Generate QR Code for Link", contexts: ["link"], kind: TARGET_KINDS.LINK, field: "linkUrl" },
+  { id: "qr-image", title: "Generate QR Code for Image", contexts: ["image"], kind: TARGET_KINDS.IMAGE, field: "srcUrl" },
+  { id: "qr-selection", title: "Generate QR Code for Selection", contexts: ["selection"], kind: TARGET_KINDS.SELECTION, field: "selectionText" },
+  { id: "qr-page", title: "Generate QR Code for Page", contexts: ["page"], kind: TARGET_KINDS.PAGE, field: "pageUrl" },
 ];
 
-const KIND_BY_ID = new Map(MENU_ITEMS.map((item) => [item.id, item.kind]));
+const ITEM_BY_ID = new Map(MENU_ITEMS.map((item) => [item.id, item]));
 
-async function syncMenus() {
-  if (!caps.menus) return; // Android has no menus API at all
-  await browser.menus.removeAll();
+// Serialized: two overlapping runs can interleave removeAll with create,
+// duplicating or silently dropping menu items.
+let syncing = Promise.resolve();
+function syncMenus() {
+  syncing = syncing
+    .then(async () => {
+      if (!caps.menus) return; // Android has no menus API at all
+      await browser.menus.removeAll();
 
-  const { contextMenus } = await getSettings();
-  if (!contextMenus) return;
+      const { contextMenus } = await getSettings();
+      if (!contextMenus) return;
 
-  for (const { id, title, contexts } of MENU_ITEMS) {
-    browser.menus.create({ id, title, contexts });
-  }
+      for (const { id, title, contexts } of MENU_ITEMS) {
+        browser.menus.create({ id, title, contexts });
+      }
+    })
+    .catch(() => {});
+  return syncing;
 }
 
 function targetFor(info) {
-  switch (KIND_BY_ID.get(info.menuItemId)) {
-    case TARGET_KINDS.LINK:
-      return { text: info.linkUrl, kind: TARGET_KINDS.LINK };
-    case TARGET_KINDS.IMAGE:
-      return { text: info.srcUrl, kind: TARGET_KINDS.IMAGE };
-    case TARGET_KINDS.SELECTION:
-      return { text: info.selectionText, kind: TARGET_KINDS.SELECTION };
-    case TARGET_KINDS.PAGE:
-      return { text: info.pageUrl, kind: TARGET_KINDS.PAGE };
-    default:
-      return null;
-  }
+  const item = ITEM_BY_ID.get(info.menuItemId);
+  return item ? { text: info[item.field], kind: item.kind } : null;
 }
 
 // openPopup() is gesture-gated and has been unreliable across versions, so the
@@ -48,7 +46,7 @@ async function showQr(target) {
     await browser.action.openPopup();
   } catch {
     await browser.tabs.create({
-      url: browser.runtime.getURL("src/popup/popup.html?as=tab"),
+      url: browser.runtime.getURL("src/popup/popup.html"),
     });
   }
 }
@@ -60,8 +58,10 @@ if (caps.menus) {
   });
 }
 
-browser.runtime.onInstalled.addListener(syncMenus);
-browser.runtime.onStartup.addListener(syncMenus);
+// Runs on every event-page wake, not just install/startup — menu persistence
+// across suspends isn't guaranteed on the oldest supported Firefox, and
+// removeAll makes the rebuild idempotent.
+syncMenus();
 
 onSettingsChanged((_changes, keys) => {
   if (keys.includes("contextMenus")) syncMenus();

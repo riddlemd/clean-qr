@@ -34,26 +34,11 @@ body {
 .icon-btn:active { background: var(--btn-bg-active); }
 .icon-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
-.segmented {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
-  background: var(--btn-bg);
-  border-radius: 6px;
-}
-
 .segmented button {
   flex: 1;
   padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--text-muted);
   white-space: nowrap;
 }
-
-.segmented button:hover:not(.selected):not(:disabled) { background: var(--btn-bg-hover); }
-.segmented button.selected { background: var(--surface-raised); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
-.segmented button:disabled { opacity: 0.4; cursor: default; }
 
 /* White in every theme — a tinted or inverted QR is a scanner-failure mode. */
 .plate {
@@ -61,6 +46,9 @@ body {
   place-items: center;
   align-self: center;
   padding: 10px;
+  /* Sized to the QR up front so the spinner→code swap doesn't reflow the panel. */
+  min-width: calc(var(--qr-size, 200px) + 22px);
+  min-height: calc(var(--qr-size, 200px) + 22px);
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -71,7 +59,6 @@ body {
 .spinner {
   width: 22px;
   height: 22px;
-  margin: 60px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;

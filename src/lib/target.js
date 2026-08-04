@@ -40,24 +40,24 @@ export function stripTracking(text) {
     return text;
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return text;
+  if (!url.search) return text;
 
-  const params = url.searchParams;
-  const doomed = [...params.keys()].filter(isTracking);
-  if (!doomed.length) return text;
-  for (const key of doomed) params.delete(key);
+  // Filtered on the raw query string — URLSearchParams would re-serialize the
+  // survivors (%20 becomes +, bare flags gain =), changing bytes the user chose.
+  const pairs = url.search.slice(1).split("&");
+  const kept = pairs.filter((pair) => {
+    const name = pair.split("=", 1)[0];
+    try {
+      return !isTracking(decodeURIComponent(name));
+    } catch {
+      return true;
+    }
+  });
+  if (kept.length === pairs.length) return text;
 
   // Drop the '?' entirely rather than leaving a trailing one behind.
-  if (![...params.keys()].length) url.search = "";
+  url.search = kept.length ? `?${kept.join("&")}` : "";
   return url.toString();
-}
-
-export function isUrl(text) {
-  try {
-    const { protocol } = new URL(text);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
 }
 
 export function prepare(text, { stripTracking: strip = true } = {}) {
@@ -66,18 +66,21 @@ export function prepare(text, { stripTracking: strip = true } = {}) {
 }
 
 // Middle-truncated so both the origin and the path tail stay readable.
+// Sliced by code point — a code-unit slice can strand half a surrogate pair.
 export function truncate(text, max = 68) {
-  if (text.length <= max) return text;
+  const chars = [...text];
+  if (chars.length <= max) return text;
   const head = Math.ceil((max - 1) / 2);
   const tail = Math.floor((max - 1) / 2);
-  return `${text.slice(0, head)}…${text.slice(-tail)}`;
+  return `${chars.slice(0, head).join("")}…${chars.slice(chars.length - tail).join("")}`;
 }
 
 export function filenameFor(text, ext) {
   let base = "qr-code";
   try {
-    const url = new URL(text);
-    base = `qr-${url.hostname.replace(/^www\./, "")}`;
+    // Hostname-less URLs (mailto:, data:, about:) keep the generic name too.
+    const { hostname } = new URL(text);
+    if (hostname) base = `qr-${hostname.replace(/^www\./, "")}`;
   } catch {
     // Selection text — keep the generic name.
   }

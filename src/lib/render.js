@@ -1,8 +1,8 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 // Never themed: an inverted or low-contrast QR is a known scanner-failure mode.
-export const DARK = "#0c0c0d";
-export const LIGHT = "#ffffff";
+const DARK = "#0c0c0d";
+const LIGHT = "#ffffff";
 
 function modulePath({ matrix, count }) {
   let d = "";
@@ -16,7 +16,7 @@ function modulePath({ matrix, count }) {
 }
 
 // Sized in module units so it scales crisply at any DPR.
-export function toSvgElement(code, { size } = {}) {
+export function toSvgElement(code, { size, label } = {}) {
   const { count, quietZone } = code;
   const edge = count + quietZone * 2;
 
@@ -27,6 +27,10 @@ export function toSvgElement(code, { size } = {}) {
   if (size) {
     svg.setAttribute("width", size);
     svg.setAttribute("height", size);
+  }
+  if (label) {
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", label);
   }
 
   const bg = document.createElementNS(SVG_NS, "rect");
@@ -44,14 +48,14 @@ export function toSvgElement(code, { size } = {}) {
   return svg;
 }
 
-export function toSvgString(code) {
+function toSvgString(code) {
   const svg = toSvgElement(code);
   return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(svg)}`;
 }
 
 // Drawn from the matrix rather than rasterizing the SVG: no image decode, no
 // async, and module edges land on exact pixel boundaries.
-export function toCanvas(code, { size = 200, scale = 2 } = {}) {
+function toCanvas(code, { size = 200, scale = 2 } = {}) {
   const { matrix, count, quietZone } = code;
   const edge = count + quietZone * 2;
 

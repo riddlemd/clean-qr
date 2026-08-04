@@ -17,7 +17,7 @@
           <div class="row-label">Theme</div>
           <p class="row-desc">Auto follows your operating system's light or dark setting.</p>
         </div>
-        <div class="segmented" data-setting="theme">
+        <div class="segmented" data-setting="theme" role="group" aria-label="Theme">
           <button type="button" data-value="auto">Auto</button>
           <button type="button" data-value="light">Light</button>
           <button type="button" data-value="dark">Dark</button>
@@ -29,7 +29,7 @@
           <div class="row-label">QR size</div>
           <p class="row-desc">How large the code appears in the popup.</p>
         </div>
-        <div class="segmented" data-setting="size" data-type="number">
+        <div class="segmented" data-setting="size" data-type="number" role="group" aria-label="QR size">
           <button type="button" data-value="150">Small</button>
           <button type="button" data-value="200">Medium</button>
           <button type="button" data-value="300">Large</button>
@@ -53,7 +53,7 @@
           <div class="row-label">Error correction</div>
           <p class="row-desc">Higher levels survive more damage but produce denser codes. Lowered automatically if a URL is too long.</p>
         </div>
-        <select data-setting="ecLevel">
+        <select data-setting="ecLevel" aria-label="Error correction">
           <option value="L">L — 7%</option>
           <option value="M">M — 15% (recommended)</option>
           <option value="Q">Q — 25%</option>
@@ -98,7 +98,7 @@
           <div class="row-label">Format</div>
           <p class="row-desc">File type used by the Save button.</p>
         </div>
-        <div class="segmented" data-setting="exportFormat">
+        <div class="segmented" data-setting="exportFormat" role="group" aria-label="Export format">
           <button type="button" data-value="png">PNG</button>
           <button type="button" data-value="svg">SVG</button>
         </div>
@@ -109,7 +109,7 @@
           <div class="row-label">PNG scale</div>
           <p class="row-desc">Higher scales export a larger image. Ignored for SVG, which is resolution-independent.</p>
         </div>
-        <div class="segmented" data-setting="pngScale" data-type="number">
+        <div class="segmented" data-setting="pngScale" data-type="number" role="group" aria-label="PNG scale">
           <button type="button" data-value="1">1×</button>
           <button type="button" data-value="2">2×</button>
           <button type="button" data-value="4">4×</button>
@@ -119,7 +119,7 @@
 
     <footer class="foot">
       <span id="version">QR Code for Firefox</span>
-      <span class="foot-note">Works entirely offline — nothing is ever sent to a server.</span>
+      <span>Works entirely offline — nothing is ever sent to a server.</span>
     </footer>
 
   </main>
