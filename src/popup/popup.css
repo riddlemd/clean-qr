@@ -1,0 +1,178 @@
+body {
+  width: 360px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.head h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.icon-btn:hover { background: var(--btn-bg-hover); color: var(--text); }
+.icon-btn:active { background: var(--btn-bg-active); }
+.icon-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--btn-bg);
+  border-radius: 6px;
+}
+
+.segmented button {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.segmented button:hover:not(.selected):not(:disabled) { background: var(--btn-bg-hover); }
+.segmented button.selected { background: var(--surface-raised); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
+.segmented button:disabled { opacity: 0.4; cursor: default; }
+
+/* Always white with dark modules, in every theme — an inverted or tinted QR is
+   a scanner-failure mode, so the theme deliberately does not reach inside. */
+.plate {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.plate svg { display: block; }
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  margin: 60px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.target {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.notice {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 12px;
+}
+
+.notice.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+.notice.error { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-text); }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.actions button {
+  flex: 1 1 0;
+  min-width: 96px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--btn-bg);
+  color: var(--text);
+}
+
+.actions button:hover:not(:disabled) { background: var(--btn-bg-hover); }
+.actions button:active:not(:disabled) { background: var(--btn-bg-active); }
+.actions button:disabled { opacity: 0.5; cursor: default; }
+
+.actions button.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.actions button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.actions button.primary:active:not(:disabled) { background: var(--accent-active); }
+
+.meta {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+
+/*
+ * Fenix renders the popup as a full-window overlay, and the tab fallback is
+ * full width too. Both land above this breakpoint; the desktop panel is pinned
+ * to 360px and never reaches it.
+ */
+@media (min-width: 420px) {
+  body { width: auto; }
+
+  .panel {
+    max-width: 460px;
+    min-height: 100vh;
+    margin: 0 auto;
+    gap: 16px;
+    padding: 18px 20px 28px;
+    justify-content: center;
+  }
+
+  .head h1 { font-size: 19px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .segmented button { padding: 9px 10px; font-size: 13px; }
+  .target { font-size: 12px; }
+
+  .actions { flex-direction: column; }
+  .actions button { flex: none; width: 100%; padding: 13px 16px; font-size: 14px; }
+}

@@ -1,0 +1,173 @@
+body {
+  padding: 16px;
+}
+
+.card {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.group + .group {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.group h2 {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.row-desc {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.chip {
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-transform: none;
+}
+
+.row.unavailable { opacity: 0.55; }
+
+.segmented {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  background: var(--btn-bg);
+  border-radius: 6px;
+}
+
+.segmented button {
+  min-width: 56px;
+  padding: 5px 11px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.segmented button:hover:not(.selected):not(:disabled) { background: var(--btn-bg-hover); }
+
+.segmented button.selected {
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+
+.segmented button:disabled { cursor: default; }
+
+select {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.toggle {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+
+.toggle[aria-checked="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle[aria-checked="true"]::after { transform: translateX(18px); }
+.toggle:disabled { cursor: default; }
+
+/* White plate in both themes, matching the popup — the QR never inverts. */
+.preview {
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.preview svg { display: block; }
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+@media (max-width: 520px) {
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .segmented, select, .toggle, .preview { align-self: flex-start; }
+}

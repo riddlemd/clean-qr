@@ -1,0 +1,169 @@
+/*
+ * Light is the base; the media query supplies the OS default. The
+ * [data-theme] rules come last and out-specify the media query in BOTH
+ * directions, so an explicit Light choice still wins on a dark-mode OS.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: #ffffff;
+  --surface: #f9f9fa;
+  --surface-raised: #ffffff;
+  --border: #d7d7db;
+  --border-strong: #c2c2c6;
+  --text: #0c0c0d;
+  --text-muted: #5b5b66;
+  --text-faint: #8f8f9d;
+
+  --accent: #0060df;
+  --accent-hover: #0250bb;
+  --accent-active: #054096;
+  --accent-text: #ffffff;
+
+  --btn-bg: #f0f0f4;
+  --btn-bg-hover: #e0e0e6;
+  --btn-bg-active: #cfcfd8;
+
+  --danger-bg: #ffe8e8;
+  --danger-border: #f3a7a7;
+  --danger-text: #8f1d1d;
+
+  --warn-bg: #fff4dd;
+  --warn-border: #f0c674;
+  --warn-text: #7a5200;
+
+  --focus: #0060df;
+  --shadow: 0 2px 8px rgba(12, 12, 13, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1b22;
+    --surface: #2b2a33;
+    --surface-raised: #35343d;
+    --border: #52525e;
+    --border-strong: #62626c;
+    --text: #fbfbfe;
+    --text-muted: #b1b1bd;
+    --text-faint: #8f8f9d;
+
+    --accent: #0df;
+    --accent-hover: #80ebff;
+    --accent-active: #aaf2ff;
+    --accent-text: #15141a;
+
+    --btn-bg: #52525e;
+    --btn-bg-hover: #5b5b66;
+    --btn-bg-active: #6a6a75;
+
+    --danger-bg: #3a1717;
+    --danger-border: #8f3b3b;
+    --danger-text: #ffb3b3;
+
+    --warn-bg: #37290d;
+    --warn-border: #8a6a20;
+    --warn-text: #ffd28a;
+
+    --focus: #0df;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f9f9fa;
+  --surface-raised: #ffffff;
+  --border: #d7d7db;
+  --border-strong: #c2c2c6;
+  --text: #0c0c0d;
+  --text-muted: #5b5b66;
+  --text-faint: #8f8f9d;
+  --accent: #0060df;
+  --accent-hover: #0250bb;
+  --accent-active: #054096;
+  --accent-text: #ffffff;
+  --btn-bg: #f0f0f4;
+  --btn-bg-hover: #e0e0e6;
+  --btn-bg-active: #cfcfd8;
+  --danger-bg: #ffe8e8;
+  --danger-border: #f3a7a7;
+  --danger-text: #8f1d1d;
+  --warn-bg: #fff4dd;
+  --warn-border: #f0c674;
+  --warn-text: #7a5200;
+  --focus: #0060df;
+  --shadow: 0 2px 8px rgba(12, 12, 13, 0.12);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1c1b22;
+  --surface: #2b2a33;
+  --surface-raised: #35343d;
+  --border: #52525e;
+  --border-strong: #62626c;
+  --text: #fbfbfe;
+  --text-muted: #b1b1bd;
+  --text-faint: #8f8f9d;
+  --accent: #0df;
+  --accent-hover: #80ebff;
+  --accent-active: #aaf2ff;
+  --accent-text: #15141a;
+  --btn-bg: #52525e;
+  --btn-bg-hover: #5b5b66;
+  --btn-bg-active: #6a6a75;
+  --danger-bg: #3a1717;
+  --danger-border: #8f3b3b;
+  --danger-text: #ffb3b3;
+  --warn-bg: #37290d;
+  --warn-border: #8a6a20;
+  --warn-text: #ffd28a;
+  --focus: #0df;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/*
+ * Settings load asynchronously, so an explicit theme override lands a frame
+ * after first paint. Hide until then — but reveal on a timer regardless, so a
+ * storage failure can never leave a permanently blank panel.
+ */
+html.theme-pending body {
+  visibility: hidden;
+  animation: theme-reveal 0s 400ms forwards;
+}
+
+@keyframes theme-reveal {
+  to { visibility: visible; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html.theme-pending body { animation: theme-reveal 0s 400ms forwards !important; }
+}
+
+* { box-sizing: border-box; }
+
+/* Author `display` declarations out-rank the UA stylesheet's [hidden] rule, so
+   without this any hidden element with a display of its own still renders. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

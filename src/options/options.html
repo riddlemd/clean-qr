@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-pending">
+<head>
+  <meta charset="utf-8">
+  <title>QR Code — Settings</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="card">
+
+    <section class="group">
+      <h2>Appearance</h2>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Theme</div>
+          <p class="row-desc">Auto follows your operating system's light or dark setting.</p>
+        </div>
+        <div class="segmented" data-setting="theme">
+          <button type="button" data-value="auto">Auto</button>
+          <button type="button" data-value="light">Light</button>
+          <button type="button" data-value="dark">Dark</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">QR size</div>
+          <p class="row-desc">How large the code appears in the popup.</p>
+        </div>
+        <div class="segmented" data-setting="size" data-type="number">
+          <button type="button" data-value="150">Small</button>
+          <button type="button" data-value="200">Medium</button>
+          <button type="button" data-value="300">Large</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Preview</div>
+          <p class="row-desc">Reflects your size and error-correction choices.</p>
+        </div>
+        <div id="preview" class="preview"></div>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Encoding</h2>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Error correction</div>
+          <p class="row-desc">Higher levels survive more damage but produce denser codes. Lowered automatically if a URL is too long.</p>
+        </div>
+        <select data-setting="ecLevel">
+          <option value="L">L — 7%</option>
+          <option value="M">M — 15% (recommended)</option>
+          <option value="Q">Q — 25%</option>
+          <option value="H">H — 30%</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Strip tracking parameters</div>
+          <p class="row-desc">Removes utm_*, fbclid, gclid and similar before encoding — a shorter URL makes a sparser, easier-to-scan code.</p>
+        </div>
+        <button type="button" class="toggle" data-setting="stripTracking" role="switch" aria-label="Strip tracking parameters"></button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Behavior</h2>
+
+      <div class="row" id="row-menus">
+        <div class="row-text">
+          <div class="row-label">Show context menu items <span class="chip">Desktop only</span></div>
+          <p class="row-desc">Adds "Generate QR Code" entries to the right-click menu for pages, links, images and selected text.</p>
+        </div>
+        <button type="button" class="toggle" data-setting="contextMenus" role="switch" aria-label="Show context menu items"></button>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Auto-copy image on open</div>
+          <p class="row-desc">Copies the QR image to your clipboard as soon as the popup opens.</p>
+        </div>
+        <button type="button" class="toggle" data-setting="autoCopy" role="switch" aria-label="Auto-copy image on open"></button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Export</h2>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Format</div>
+          <p class="row-desc">File type used by the Save button.</p>
+        </div>
+        <div class="segmented" data-setting="exportFormat">
+          <button type="button" data-value="png">PNG</button>
+          <button type="button" data-value="svg">SVG</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">PNG scale</div>
+          <p class="row-desc">Higher scales export a larger image. Ignored for SVG, which is resolution-independent.</p>
+        </div>
+        <div class="segmented" data-setting="pngScale" data-type="number">
+          <button type="button" data-value="1">1×</button>
+          <button type="button" data-value="2">2×</button>
+          <button type="button" data-value="4">4×</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span id="version">QR Code for Firefox</span>
+      <span class="foot-note">Works entirely offline — nothing is ever sent to a server.</span>
+    </footer>
+
+  </main>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

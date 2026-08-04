@@ -1,0 +1,27 @@
+{
+  "name": "ff-qr-extension",
+  "version": "1.0.0",
+  "description": "Firefox extension that generates QR codes for the current page, links, images, and selected text.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "web-ext run --source-dir .",
+    "start:android": "web-ext run --source-dir . -t firefox-android",
+    "lint": "web-ext lint --source-dir .",
+    "build": "web-ext build --source-dir . --overwrite-dest",
+    "test": "node --test 'test/**/*.test.js'"
+  },
+  "devDependencies": {
+    "web-ext": "^8.3.0"
+  },
+  "webExt": {
+    "ignoreFiles": [
+      "research",
+      "test",
+      "package.json",
+      "package-lock.json",
+      "node_modules",
+      "src/vendor/qrcode.d.ts"
+    ]
+  }
+}
