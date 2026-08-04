@@ -35,6 +35,14 @@ test("corrupt stored values fall back to defaults", async () => {
   assert.equal(settings.pngScale, DEFAULTS.pngScale);
 });
 
+// Deliberate product decisions, pinned so they can't drift silently.
+test("the optional extras stay off until asked for", () => {
+  assert.equal(DEFAULTS.actionCopyUrl, false);
+  assert.equal(DEFAULTS.actionFullScreen, false);
+  assert.equal(DEFAULTS.menuFrame, false);
+  assert.equal(DEFAULTS.recentCodes, false);
+});
+
 test("open-ended settings validate by rule rather than by list", async () => {
   local.clear();
   await setSetting("trackingExtra", "ref, cid");

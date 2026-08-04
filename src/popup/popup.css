@@ -90,31 +90,40 @@ body {
 .actions {
   display: flex;
   flex-wrap: wrap;
+  /* Centred so a short final row sits under the middle of the one above rather
+     than hanging off the left edge. */
+  justify-content: center;
   gap: 6px;
 }
 
 .actions button {
-  flex: 1 1 0;
-  min-width: 96px;
-  padding: 7px 10px;
+  /* Four to a row: a 25% basis can never fit five, so the row breaks there. The
+     cap keeps a short final row the same size as a full one, so no button gains
+     weight just by being last. */
+  flex: 1 1 calc(25% - 6px);
+  max-width: calc(25% - 6px);
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 34px;
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
   background: var(--btn-bg);
   color: var(--text);
+}
+
+.actions button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .actions button:hover:not(:disabled) { background: var(--btn-bg-hover); }
 .actions button:active:not(:disabled) { background: var(--btn-bg-active); }
 .actions button:disabled { opacity: 0.5; cursor: default; }
-
-.actions button.primary {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.actions button.primary:hover:not(:disabled) { background: var(--accent-hover); }
-.actions button.primary:active:not(:disabled) { background: var(--accent-active); }
 
 .meta {
   font-size: 11px;
@@ -187,6 +196,9 @@ html.large .target {
   .segmented button { padding: 9px 10px; font-size: 13px; }
   .target { font-size: 12px; }
 
-  .actions { flex-direction: column; }
-  .actions button { flex: none; width: 100%; padding: 13px 16px; font-size: 14px; }
+  /* Icons stay in a row here — stacking them full-width would give each glyph a
+     whole line of empty space. Taller instead, for a comfortable touch target. */
+  .actions { gap: 8px; }
+  .actions button { flex-basis: calc(25% - 8px); max-width: calc(25% - 8px); height: 48px; }
+  .actions button svg { width: 20px; height: 20px; }
 }

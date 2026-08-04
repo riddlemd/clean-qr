@@ -12,6 +12,10 @@ export const DEFAULTS = Object.freeze({
   menuFrame: false,       // only fires inside an iframe, so off until asked for
   autoCopy: false,
   autoCopyFormat: "image",
+  // Extra popup buttons, off by default — the popup stays compact and the
+  // remaining ones keep their labels readable at a glance.
+  actionCopyUrl: false,
+  actionFullScreen: false,
   exportFormat: "png",
   pngScale: 2,
   filename: "host",

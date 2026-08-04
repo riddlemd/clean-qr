@@ -133,6 +133,35 @@ function paintSources() {
   });
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+// Stroked outlines on a 16-unit grid, matching the header's settings gear. Paths
+// only — no circles or rects — so one builder covers every glyph.
+const GLYPHS = {
+  share: ["M8 10.5V2.5", "M5 5.5 8 2.5l3 3", "M3.5 8.5v4a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-4"],
+  copy: ["M6 6h7.5v7.5H6z", "M10.5 6V3.5a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1V10a1 1 0 0 0 1 1h2.5"],
+  download: ["M8 2.5v8", "M4.5 7 8 10.5 11.5 7", "M2.5 13.5h11"],
+  link: [
+    "M6.5 9.5a3 3 0 0 0 4.24 0l2-2a3 3 0 1 0-4.24-4.24l-.7.7",
+    "M9.5 6.5a3 3 0 0 0-4.24 0l-2 2a3 3 0 1 0 4.24 4.24l.7-.7",
+  ],
+  code: ["M5.5 5 2.5 8l3 3", "M10.5 5 13.5 8l-3 3"],
+  expand: ["M6 2.5H2.5V6", "M10 2.5h3.5V6", "M6 13.5H2.5V10", "M10 13.5h3.5V10"],
+};
+
+function glyph(name) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  for (const d of GLYPHS[name]) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+  }
+  return svg;
+}
+
 function renderMeta(code) {
   const ec = code.downgraded
     ? `${code.ecLevel} (lowered from ${code.requestedEc})`
@@ -268,28 +297,36 @@ function renderActions() {
   const ready = Boolean(current.pngBlob);
   const buttons = [];
 
+  // No action is emphasised over the others. The code on screen is the point;
+  // these are all just ways of moving it somewhere else.
   if (caps.webShare) {
-    buttons.push({ label: "Share…", onClick: share, primary: true, needsBlob: true });
+    buttons.push({ icon: "share", label: "Share", onClick: share, needsBlob: true });
   }
   if (caps.clipboardImage) {
-    buttons.push({ label: "Copy image", onClick: copyImage, primary: !caps.webShare, needsBlob: true });
+    buttons.push({ icon: "copy", label: "Copy image", onClick: copyImage, needsBlob: true });
   }
   buttons.push({
+    icon: "download",
     label: settings.exportFormat === "svg" ? "Save SVG" : "Save PNG",
     onClick: saveFile,
     needsBlob: settings.exportFormat !== "svg",
   });
   if (caps.clipboardText) {
-    buttons.push({ label: "Copy URL", onClick: copyUrl });
-    buttons.push({ label: "Copy Markdown", onClick: copyMarkdown });
+    if (settings.actionCopyUrl) buttons.push({ icon: "link", label: "Copy URL", onClick: copyUrl });
+    buttons.push({ icon: "code", label: "Copy Markdown", onClick: copyMarkdown });
   }
-  buttons.push({ label: "Full screen", onClick: openLarge });
+  if (settings.actionFullScreen) {
+    buttons.push({ icon: "expand", label: "Full screen", onClick: openLarge });
+  }
 
-  for (const { label, onClick, primary, needsBlob } of buttons) {
+  for (const { icon, label, onClick, needsBlob } of buttons) {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = label;
-    if (primary) button.className = "primary";
+    // Icon-only, so the label has to reach the accessibility tree some other way:
+    // title for a pointer, aria-label for a screen reader.
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.appendChild(glyph(icon));
     if (needsBlob) {
       button.dataset.needsBlob = "";
       button.disabled = !ready;
