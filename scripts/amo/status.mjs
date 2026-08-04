@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// Reports where the current manifest version sits in AMO review.
-// Exits 0 only when it is approved, so it can gate: npm run status:amo && npm run release
+// Exits 0 only when the version is approved, so it can gate: npm run status:amo && npm run release
 
 import { ADDON_ID, VERSION, fetchAddon, createJwt, fetchVersion } from "./client.mjs";
 

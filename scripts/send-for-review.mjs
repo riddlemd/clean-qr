@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// Bumps the version, submits it to AMO, then commits and tags what was sent.
-//
 //   npm run send-for-review            patch: 1.0.0 -> 1.0.1
 //   npm run send-for-review -- minor   1.0.0 -> 1.1.0
 //   npm run send-for-review -- major   1.0.0 -> 2.0.0
@@ -85,10 +83,9 @@ git(["add", "manifest.json", "package.json"]);
 git(["commit", "-m", `Release ${next}`]);
 git(["tag", "-a", tag, "-m", `Submitted to AMO as ${next}`]);
 
-// Pushed because the version is already with Mozilla at this point: leaving the
-// commit local would mean the published artefact has no public commit behind it.
-// The branch and tag go separately rather than via --follow-tags, which would
-// also drag along any other annotated tag reachable from here.
+// Pushed because the version is already with Mozilla — the commit needs a public
+// record behind it. Branch and tag go separately, not via --follow-tags, which
+// would drag along any other annotated tag reachable from here.
 const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
 try {
   git(["push", "-u", "origin", branch], { stdio: "inherit" });

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// Publishes the Mozilla-signed XPI as a GitHub Release.
-//
 // Obtaining the signed XPI is AMO's problem (amo/get-signed-xpi.mjs); creating the
 // release is GitHub's (github/release.mjs). This just orders the two.
 

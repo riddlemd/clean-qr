@@ -92,11 +92,8 @@ export function classify(selection) {
 // Words taken from each end when a selection is too long to encode whole.
 const FRAGMENT_EDGE_WORDS = 5;
 
-// A text fragment (#:~:text=) scrolls the reader to the selected passage without
-// the page needing an id to anchor to. The receiving browser resolves it, so the
-// version generating the code is irrelevant — Firefox reads them from 131,
-// Chrome and Safari long before that, and anything older just ignores the
-// directive and loads the page normally.
+// A text fragment (#:~:text=) scrolls the reader to the selected passage. The
+// receiving browser resolves it, so the version generating the code doesn't matter.
 //
 // Long selections use the start,end form: it matches the same passage while
 // encoding only the two ends, which keeps the QR far sparser.

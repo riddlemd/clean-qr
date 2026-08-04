@@ -1,8 +1,6 @@
-// Obtains the Mozilla-signed XPI for the current manifest version.
-//
-// `web-ext sign` downloads it only if review finishes inside its 15-minute wait,
-// which it usually does not, so the file is often absent and has to be pulled
-// from AMO afterwards.
+// `web-ext sign` downloads the signed XPI only if review finishes inside its
+// 15-minute wait, which it usually does not, so the file is often absent and has
+// to be pulled from AMO afterwards.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -51,7 +49,6 @@ async function download() {
   return out;
 }
 
-// Returns a path to a verified-signed XPI, or exits with a reason.
 export async function getSignedXpi() {
   let file = fromDisk();
   if (file) console.log(`using ${file}`);

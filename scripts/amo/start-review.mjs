@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// Submits the current tree to AMO for review on the listed channel.
-//
 // Runnable on its own, and used by scripts/send-for-review.mjs after it bumps
 // the version. Exits non-zero if AMO already has this version, since AMO refuses
 // a reused version string and the run would fail further in for a vaguer reason.

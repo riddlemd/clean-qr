@@ -29,7 +29,6 @@ export const DEFAULTS = Object.freeze({
 
 // A stale or hand-edited stored value would otherwise reach encode()/toCanvas()
 // and error on every popup open, with no way to recover from the popup itself.
-// A Set lists the allowed values; a function validates open-ended ones.
 const VALID = {
   theme: new Set(["auto", "light", "dark"]),
   size: new Set([150, 200, 300]),

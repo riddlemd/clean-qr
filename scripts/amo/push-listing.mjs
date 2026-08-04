@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-// Pushes the add-on-level fields of amo-metadata.json onto the live AMO listing.
-//
-// web-ext only sends that file during a version submission, so edits to it do not
-// reach a listing whose version is already submitted. This closes that gap.
+// web-ext only sends amo-metadata.json during a version submission, so edits to
+// it do not reach a listing whose version is already submitted. This script
+// closes that gap.
 
 import { createRequire } from "node:module";
 
