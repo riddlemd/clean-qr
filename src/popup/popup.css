@@ -136,9 +136,10 @@ body {
   pointer-events: none;
 }
 
-/* Fenix renders the popup as a full-window overlay and the tab fallback is full
-   width; both clear this breakpoint, while the 360px desktop panel never does. */
-@media (min-width: 420px) {
+/* Keyed on height, not width: Firefox caps a desktop popup at 600px tall, while
+   the Fenix full-window overlay and the tab fallback are far taller. Width can't
+   tell them apart — plenty of phones report the same 360px the popup uses. */
+@media (min-height: 640px) {
   body { width: auto; }
 
   .panel {
