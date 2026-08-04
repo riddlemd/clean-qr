@@ -55,8 +55,7 @@ body {
 .segmented button.selected { background: var(--surface-raised); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
 .segmented button:disabled { opacity: 0.4; cursor: default; }
 
-/* Always white with dark modules, in every theme — an inverted or tinted QR is
-   a scanner-failure mode, so the theme deliberately does not reach inside. */
+/* White in every theme — a tinted or inverted QR is a scanner-failure mode. */
 .plate {
   display: grid;
   place-items: center;
@@ -150,11 +149,8 @@ body {
   pointer-events: none;
 }
 
-/*
- * Fenix renders the popup as a full-window overlay, and the tab fallback is
- * full width too. Both land above this breakpoint; the desktop panel is pinned
- * to 360px and never reaches it.
- */
+/* Fenix renders the popup as a full-window overlay and the tab fallback is full
+   width; both clear this breakpoint, while the 360px desktop panel never does. */
 @media (min-width: 420px) {
   body { width: auto; }
 

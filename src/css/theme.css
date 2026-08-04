@@ -1,8 +1,5 @@
-/*
- * Light is the base; the media query supplies the OS default. The
- * [data-theme] rules come last and out-specify the media query in BOTH
- * directions, so an explicit Light choice still wins on a dark-mode OS.
- */
+/* [data-theme] out-specifies the media query in both directions, so an explicit
+   Light choice still wins on a dark-mode OS. */
 :root {
   color-scheme: light dark;
 
@@ -123,11 +120,8 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/*
- * Settings load asynchronously, so an explicit theme override lands a frame
- * after first paint. Hide until then — but reveal on a timer regardless, so a
- * storage failure can never leave a permanently blank panel.
- */
+/* Hidden until JS applies the stored theme. The delayed animation reveals it
+   regardless, so a storage failure can't leave a permanently blank panel. */
 html.theme-pending body {
   visibility: hidden;
   animation: theme-reveal 0s 400ms forwards;

@@ -134,9 +134,8 @@ async function renderCode() {
 }
 
 function download(blob, filename) {
-  // An anchor download avoids the `downloads` permission warning entirely, and
-  // is the only path that has any chance of working on Android where the
-  // downloads API was removed in Fenix 79.
+  // Anchor download avoids the `downloads` permission warning, and is the only
+  // path that can work on Android at all — the API was removed in Fenix 79.
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;

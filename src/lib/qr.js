@@ -1,11 +1,10 @@
 import qrcode from "../vendor/qrcode.mjs";
 
-// Denser to sparser. Downgrading walks toward L, buying back capacity.
+// Ordered denser to sparser: downgrading slices toward L to buy back capacity.
 const EC_ORDER = ["H", "Q", "M", "L"];
 
-// Past this, module density makes phone-camera scanning off a screen unreliable.
-// Screen-displayed codes don't face the physical wear that justifies high EC on
-// print, so trading EC for a lower version is the right call here.
+// Past this, density makes phone-camera scanning off a screen unreliable. Screen
+// codes face none of the wear that justifies high EC on print, so EC gives first.
 export const SOFT_MAX_VERSION = 12;
 
 const QUIET_ZONE = 4; // modules, per ISO/IEC 18004 — never crop this
@@ -24,11 +23,8 @@ function attempt(text, ecLevel) {
   return { matrix, count, version: (count - 17) / 4, ecLevel };
 }
 
-/**
- * Encodes text, automatically relaxing error correction if the requested level
- * pushes the code past SOFT_MAX_VERSION. Returns `downgraded` so the UI can
- * show the change rather than silently altering what the user picked.
- */
+// `downgraded` is reported back so the UI can surface the change rather than
+// silently overriding the level the user chose.
 export function encode(text, requestedEc = "M") {
   if (!text) throw new Error("Nothing to encode");
 

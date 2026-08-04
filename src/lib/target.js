@@ -1,6 +1,5 @@
-// Dropping these shortens the encoded string, which directly lowers the QR
-// version and makes the code easier to scan. Prefixes are matched too, which is
-// what catches the open-ended utm_* and mc_* families.
+// Dropping these lowers the QR version, which is what makes the code easier to
+// scan. Prefixes cover the open-ended utm_*/mc_* families.
 const TRACKING_EXACT = new Set([
   "fbclid", "gclid", "gclsrc", "dclid", "gbraid", "wbraid",
   "msclkid", "twclid", "igshid", "igsh", "ttclid", "li_fat_id",
@@ -32,10 +31,7 @@ function isTracking(name) {
   return TRACKING_EXACT.has(key) || TRACKING_PREFIXES.some((p) => key.startsWith(p));
 }
 
-/**
- * Removes tracking parameters from a URL string. Non-URL input (a text
- * selection) and unparseable input pass through untouched.
- */
+// Non-URL input (a text selection) passes through untouched rather than throwing.
 export function stripTracking(text) {
   let url;
   try {
@@ -69,7 +65,7 @@ export function prepare(text, { stripTracking: strip = true } = {}) {
   return strip ? stripTracking(trimmed) : trimmed;
 }
 
-/** Middle-truncates so both the origin and the path tail stay readable. */
+// Middle-truncated so both the origin and the path tail stay readable.
 export function truncate(text, max = 68) {
   if (text.length <= max) return text;
   const head = Math.ceil((max - 1) / 2);

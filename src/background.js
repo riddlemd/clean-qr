@@ -39,9 +39,8 @@ function targetFor(info) {
   }
 }
 
-// action.openPopup() is gated on user-gesture context and has been inconsistent
-// across versions. A menu click is a gesture, but when the call is unavailable
-// or rejects we open the same document as a tab instead of dropping the action.
+// openPopup() is gesture-gated and has been unreliable across versions, so the
+// tab fallback is load-bearing rather than defensive.
 async function showQr(target) {
   await setPending(target.text, target.kind);
   try {

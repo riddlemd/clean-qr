@@ -1,7 +1,7 @@
 import { getSettings, onSettingsChanged } from "./settings.js";
 
-// "auto" leaves data-theme off so the prefers-color-scheme media query decides.
-// Explicit light/dark stamp the attribute, which the CSS overrides both directions.
+// "auto" leaves data-theme off so the media query decides; an explicit choice
+// stamps the attribute, which out-specifies the media query in both directions.
 export function applyTheme(theme) {
   const root = document.documentElement;
   if (theme === "light" || theme === "dark") {
@@ -13,17 +13,8 @@ export function applyTheme(theme) {
   }
 }
 
-// Resolves what's actually on screen right now — the QR plate stays white
-// regardless, but chrome-adjacent bits (e.g. canvas export padding) need the truth.
-export function resolvedTheme(theme) {
-  if (theme === "light" || theme === "dark") return theme;
-  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-// Storage is async, so a non-auto override lands one frame after first paint.
-// The .theme-pending class on <html> holds the page invisible until then; it is
-// removed here and by a CSS-side timeout fallback so a storage failure can't
-// leave a blank panel.
+// Storage is async, so an override lands a frame after first paint; .theme-pending
+// hides the page until this clears it. theme.css carries the failure-path reveal.
 export async function initTheme() {
   let theme = "auto";
   try {

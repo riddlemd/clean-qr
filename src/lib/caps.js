@@ -1,6 +1,6 @@
-// Feature-detected rather than platform-sniffed so this fails safe as Firefox
-// for Android gains APIs. Notable gaps it papers over: `menus` is absent on
-// Android entirely, and `downloads` was removed there in Fenix 79.
+// Feature-detected, not platform-sniffed, so this fails safe as Firefox for
+// Android gains APIs. `menus` is absent there entirely; `downloads` was removed
+// in Fenix 79.
 export const caps = {
   menus: typeof browser !== "undefined" && typeof browser.menus !== "undefined",
   downloads: typeof browser !== "undefined" && typeof browser.downloads !== "undefined",
@@ -10,6 +10,5 @@ export const caps = {
   clipboardText: typeof navigator.clipboard?.writeText === "function",
 };
 
-// `downloads` is the clearer signal than a user-agent string: it is present on
-// every desktop build and absent on every current Android one.
+// `downloads` splits desktop from Android more reliably than a user-agent string.
 export const isAndroid = !caps.downloads && caps.webShare;

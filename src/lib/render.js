@@ -1,8 +1,6 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-// The code always renders dark-on-white regardless of UI theme. An inverted or
-// low-contrast QR is a well-known scanner-failure mode, so the theme setting is
-// deliberately not allowed to reach these two values.
+// Never themed: an inverted or low-contrast QR is a known scanner-failure mode.
 export const DARK = "#0c0c0d";
 export const LIGHT = "#ffffff";
 
@@ -17,7 +15,7 @@ function modulePath({ matrix, count }) {
   return d;
 }
 
-/** Builds an <svg> element sized in module units, so it scales crisply at any DPR. */
+// Sized in module units so it scales crisply at any DPR.
 export function toSvgElement(code, { size } = {}) {
   const { count, quietZone } = code;
   const edge = count + quietZone * 2;
@@ -51,16 +49,13 @@ export function toSvgString(code) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(svg)}`;
 }
 
-/**
- * Draws straight from the module matrix rather than rasterizing the SVG — no
- * image decode, no async, and module edges land on exact pixel boundaries.
- */
+// Drawn from the matrix rather than rasterizing the SVG: no image decode, no
+// async, and module edges land on exact pixel boundaries.
 export function toCanvas(code, { size = 200, scale = 2 } = {}) {
   const { matrix, count, quietZone } = code;
   const edge = count + quietZone * 2;
 
-  // Round the module size up so modules stay integer-sized; the canvas grows to
-  // match rather than letting fractional widths blur module edges.
+  // Integer module size, canvas grown to match — fractional widths blur edges.
   const modulePx = Math.max(1, Math.ceil((size * scale) / edge));
   const px = modulePx * edge;
 
