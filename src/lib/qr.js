@@ -11,6 +11,15 @@ const EC_ORDER = ["H", "Q", "M", "L"];
 // codes face none of the wear that justifies high EC on print, so EC gives first.
 export const SOFT_MAX_VERSION = 12;
 
+// Which way to lean when the two goals conflict: a lower ceiling sheds error
+// correction sooner to keep the code sparse, a higher one holds the chosen level
+// and accepts a denser code.
+export const CEILINGS = Object.freeze({
+  scannable: 8,
+  balanced: SOFT_MAX_VERSION,
+  correction: 20,
+});
+
 const QUIET_ZONE = 4; // modules, per ISO/IEC 18004 — never crop this
 
 function attempt(text, ecLevel) {
@@ -29,7 +38,7 @@ function attempt(text, ecLevel) {
 
 // `downgraded` is reported back so the UI can surface the change rather than
 // silently overriding the level the user chose.
-export function encode(text, requestedEc = "M") {
+export function encode(text, requestedEc = "M", ceiling = SOFT_MAX_VERSION) {
   if (!text) throw new Error("Nothing to encode");
 
   const start = EC_ORDER.indexOf(requestedEc);
@@ -45,7 +54,7 @@ export function encode(text, requestedEc = "M") {
     } catch {
       continue; // capacity exceeded at this level — try a sparser one
     }
-    if (result.version <= SOFT_MAX_VERSION) {
+    if (result.version <= ceiling) {
       return { ...result, quietZone: QUIET_ZONE, requestedEc, downgraded: ec !== requestedEc, dense: false };
     }
     // Keep the sparsest success in case nothing lands under the ceiling.

@@ -37,6 +37,29 @@ test("syncMenus registers all four items when enabled", async () => {
   ]);
 });
 
+test("the frame item stays out until asked for", async () => {
+  local.clear();
+  calls.menus.length = 0;
+  await syncMenus();
+  assert.ok(!calls.menus.includes("create:qr-frame"), "frame item should be off by default");
+
+  local.set("menuFrame", true);
+  calls.menus.length = 0;
+  await syncMenus();
+  assert.ok(calls.menus.includes("create:qr-frame"));
+  local.delete("menuFrame");
+});
+
+test("individual menu items can be switched off", async () => {
+  local.clear();
+  local.set("menuImage", false);
+  local.set("menuSelection", false);
+  calls.menus.length = 0;
+  await syncMenus();
+  assert.deepEqual(calls.menus, ["removeAll", "create:qr-link", "create:qr-page"]);
+  local.clear();
+});
+
 test("syncMenus removes without recreating when disabled", async () => {
   local.set("contextMenus", false);
   calls.menus.length = 0;

@@ -71,6 +71,61 @@
         </div>
         <button type="button" class="toggle" data-setting="stripTracking" role="switch" aria-label="Strip tracking parameters"></button>
       </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Extra parameters to strip</div>
+          <p class="row-desc">Your own names, separated by commas. Useful when a site adds tracking the built-in list doesn't cover.</p>
+        </div>
+        <input type="text" data-setting="trackingExtra" aria-label="Extra parameters to strip" placeholder="ref, source, cid" maxlength="500">
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">When a code gets dense</div>
+          <p class="row-desc">Long URLs force a choice between error correction and a code your phone can actually read.</p>
+        </div>
+        <div class="segmented" data-setting="density" role="group" aria-label="When a code gets dense">
+          <button type="button" data-value="scannable">Keep it scannable</button>
+          <button type="button" data-value="balanced">Balanced</button>
+          <button type="button" data-value="correction">Keep correction</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Selected text</h2>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Link to the selected text</div>
+          <p class="row-desc">Builds a link that scrolls the reader to the passage you highlighted. Ignored by browsers older than Firefox 131.</p>
+        </div>
+        <button type="button" class="toggle" data-setting="textFragments" role="switch" aria-label="Link to the selected text"></button>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Show first</div>
+          <p class="row-desc">Which reading of a selection the popup opens on.</p>
+        </div>
+        <div class="segmented" data-setting="selectionDefault" role="group" aria-label="Show first">
+          <button type="button" data-value="link">Link</button>
+          <button type="button" data-value="text">Text</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Link precision</div>
+          <p class="row-desc">Matching the whole passage is exact; matching only its ends encodes far less and keeps the code sparse.</p>
+        </div>
+        <div class="segmented" data-setting="fragmentPrecision" role="group" aria-label="Link precision">
+          <button type="button" data-value="auto">Auto</button>
+          <button type="button" data-value="whole">Whole</button>
+          <button type="button" data-value="ends">Ends</button>
+        </div>
+      </div>
     </section>
 
     <section class="group">
@@ -84,12 +139,66 @@
         <button type="button" class="toggle" data-setting="contextMenus" role="switch" aria-label="Show context menu items"></button>
       </div>
 
+      <div class="row" id="row-menu-items">
+        <div class="row-text">
+          <div class="row-label">Which entries</div>
+          <p class="row-desc">Turn off the ones you never use. Frame only appears when you right-click inside an embedded page.</p>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" data-setting="menuPage"> Page</label>
+          <label><input type="checkbox" data-setting="menuLink"> Link</label>
+          <label><input type="checkbox" data-setting="menuImage"> Image</label>
+          <label><input type="checkbox" data-setting="menuSelection"> Selection</label>
+          <label><input type="checkbox" data-setting="menuFrame"> Frame</label>
+        </div>
+      </div>
+
       <div class="row">
         <div class="row-text">
-          <div class="row-label">Auto-copy image on open</div>
-          <p class="row-desc">Copies the QR image to your clipboard as soon as the popup opens.</p>
+          <div class="row-label">Auto-copy on open</div>
+          <p class="row-desc">Copies to your clipboard as soon as the popup opens.</p>
         </div>
-        <button type="button" class="toggle" data-setting="autoCopy" role="switch" aria-label="Auto-copy image on open"></button>
+        <button type="button" class="toggle" data-setting="autoCopy" role="switch" aria-label="Auto-copy on open"></button>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Auto-copy format</div>
+          <p class="row-desc">The image, or the cleaned-up address as text.</p>
+        </div>
+        <div class="segmented" data-setting="autoCopyFormat" role="group" aria-label="Auto-copy format">
+          <button type="button" data-value="image">Image</button>
+          <button type="button" data-value="url">URL</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Remember recent codes</div>
+          <p class="row-desc">Keeps the last ten things you encoded so you can bring one back. Stored on this device only, never in private windows. Off by default.</p>
+        </div>
+        <button type="button" class="toggle" data-setting="recentCodes" role="switch" aria-label="Remember recent codes"></button>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">How many to keep</div>
+          <p class="row-desc">Older ones drop off the end. Lowering this discards anything past the new limit.</p>
+        </div>
+        <div class="segmented" data-setting="recentLimit" data-type="number" role="group" aria-label="How many to keep">
+          <button type="button" data-value="5">5</button>
+          <button type="button" data-value="10">10</button>
+          <button type="button" data-value="25">25</button>
+          <button type="button" data-value="50">50</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">Stored codes</div>
+          <p class="row-desc" id="recent-count">Nothing stored.</p>
+        </div>
+        <button type="button" class="btn" id="clear-recent">Clear now</button>
       </div>
     </section>
 
@@ -116,6 +225,18 @@
           <button type="button" data-value="1">1×</button>
           <button type="button" data-value="2">2×</button>
           <button type="button" data-value="4">4×</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-text">
+          <div class="row-label">File name</div>
+          <p class="row-desc">What saved files are called.</p>
+        </div>
+        <div class="segmented" data-setting="filename" role="group" aria-label="File name">
+          <button type="button" data-value="host">Site</button>
+          <button type="button" data-value="title">Page title</button>
+          <button type="button" data-value="hostDate">Site + date</button>
         </div>
       </div>
     </section>

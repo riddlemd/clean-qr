@@ -4,10 +4,11 @@ import { setPending } from "./lib/pending.js";
 import { TARGET_KINDS } from "./lib/target.js";
 
 const MENU_ITEMS = [
-  { id: "qr-link", title: "Generate QR Code for Link", contexts: ["link"], kind: TARGET_KINDS.LINK, field: "linkUrl" },
-  { id: "qr-image", title: "Generate QR Code for Image", contexts: ["image"], kind: TARGET_KINDS.IMAGE, field: "srcUrl" },
-  { id: "qr-selection", title: "Generate QR Code for Selection", contexts: ["selection"], kind: TARGET_KINDS.SELECTION, field: "selectionText" },
-  { id: "qr-page", title: "Generate QR Code for Page", contexts: ["page"], kind: TARGET_KINDS.PAGE, field: "pageUrl" },
+  { id: "qr-link", title: "Generate QR Code for Link", contexts: ["link"], kind: TARGET_KINDS.LINK, field: "linkUrl", setting: "menuLink" },
+  { id: "qr-image", title: "Generate QR Code for Image", contexts: ["image"], kind: TARGET_KINDS.IMAGE, field: "srcUrl", setting: "menuImage" },
+  { id: "qr-selection", title: "Generate QR Code for Selection", contexts: ["selection"], kind: TARGET_KINDS.SELECTION, field: "selectionText", setting: "menuSelection" },
+  { id: "qr-page", title: "Generate QR Code for Page", contexts: ["page"], kind: TARGET_KINDS.PAGE, field: "pageUrl", setting: "menuPage" },
+  { id: "qr-frame", title: "Generate QR Code for Frame", contexts: ["frame"], kind: TARGET_KINDS.FRAME, field: "frameUrl", setting: "menuFrame" },
 ];
 
 const ITEM_BY_ID = new Map(MENU_ITEMS.map((item) => [item.id, item]));
@@ -21,11 +22,11 @@ function syncMenus() {
       if (!caps.menus) return; // Android has no menus API at all
       await browser.menus.removeAll();
 
-      const { contextMenus } = await getSettings();
-      if (!contextMenus) return;
+      const settings = await getSettings();
+      if (!settings.contextMenus) return;
 
-      for (const { id, title, contexts } of MENU_ITEMS) {
-        browser.menus.create({ id, title, contexts });
+      for (const { id, title, contexts, setting } of MENU_ITEMS) {
+        if (settings[setting]) browser.menus.create({ id, title, contexts });
       }
     })
     .catch(() => {});
@@ -63,8 +64,10 @@ if (caps.menus) {
 // removeAll makes the rebuild idempotent.
 syncMenus();
 
+const MENU_SETTINGS = new Set(["contextMenus", ...MENU_ITEMS.map((i) => i.setting)]);
+
 onSettingsChanged((_changes, keys) => {
-  if (keys.includes("contextMenus")) syncMenus();
+  if (keys.some((k) => MENU_SETTINGS.has(k))) syncMenus();
 });
 
 // Exported for the test suite; nothing imports this module at runtime.

@@ -35,6 +35,33 @@ test("corrupt stored values fall back to defaults", async () => {
   assert.equal(settings.pngScale, DEFAULTS.pngScale);
 });
 
+test("open-ended settings validate by rule rather than by list", async () => {
+  local.clear();
+  await setSetting("trackingExtra", "ref, cid");
+  assert.equal(local.get("trackingExtra"), "ref, cid");
+  await assert.rejects(() => setSetting("trackingExtra", "x".repeat(501)), /Invalid trackingExtra/);
+  await assert.rejects(() => setSetting("trackingExtra", 42), /Invalid trackingExtra/);
+});
+
+test("an over-long stored parameter list falls back rather than breaking", async () => {
+  local.clear();
+  local.set("trackingExtra", "y".repeat(900));
+  assert.equal((await getSettings()).trackingExtra, DEFAULTS.trackingExtra);
+});
+
+test("the new choice settings reject values outside their list", async () => {
+  for (const [key, bad] of [
+    ["density", "aggressive"],
+    ["selectionDefault", "neither"],
+    ["fragmentPrecision", "exact"],
+    ["autoCopyFormat", "svg"],
+    ["filename", "slug"],
+    ["recentLimit", 7],
+  ]) {
+    await assert.rejects(() => setSetting(key, bad), new RegExp(`Invalid ${key}`));
+  }
+});
+
 test("setSetting rejects unknown keys and invalid values", async () => {
   await assert.rejects(() => setSetting("bogus", 1), /Unknown setting/);
   await assert.rejects(() => setSetting("ecLevel", "X"), /Invalid ecLevel/);

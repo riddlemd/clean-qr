@@ -2,9 +2,25 @@ import { initTheme } from "../lib/theme.js";
 import { getSettings } from "../lib/settings.js";
 import { takePending } from "../lib/pending.js";
 import { caps } from "../lib/caps.js";
-import { encode } from "../lib/qr.js";
-import { toSvgElement, toPngBlob, toSvgBlob } from "../lib/render.js";
-import { prepare, truncate, filenameFor, textFragmentUrl, KIND_LABELS, TARGET_KINDS } from "../lib/target.js";
+import { encode, CEILINGS } from "../lib/qr.js";
+import {
+  toSvgElement,
+  toPngBlob,
+  toSvgBlob,
+  toSvgDataUri,
+  asMarkdown,
+} from "../lib/render.js";
+import { remember } from "../lib/history.js";
+import {
+  classify,
+  parseExtraTracking,
+  prepare,
+  truncate,
+  filenameFor,
+  textFragmentUrl,
+  KIND_LABELS,
+  TARGET_KINDS,
+} from "../lib/target.js";
 
 const el = {
   plate: document.getElementById("plate"),
@@ -21,6 +37,9 @@ let settings;
 let sources = [];
 let selected = 0;
 let current = null;
+let pageTitle = null;
+let extraTracking = null;
+let incognito = false;
 
 function toast(message) {
   el.toast.textContent = message;
@@ -40,10 +59,10 @@ function clearNotice() {
   el.notice.hidden = true;
 }
 
-async function activeTabUrl() {
+async function activeTab() {
   try {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-    return tab?.url ?? null;
+    return tab ?? null;
   } catch {
     return null; // No activeTab grant, e.g. a privileged page
   }
@@ -51,16 +70,28 @@ async function activeTabUrl() {
 
 async function collectSources() {
   const found = [];
-  const [pending, url] = await Promise.all([takePending(), activeTabUrl()]);
+  const [pending, tab] = await Promise.all([takePending(), activeTab()]);
+  const url = tab?.url ?? null;
+  pageTitle = tab?.title ?? null;
+  incognito = Boolean(tab?.incognito);
 
   if (pending?.text) {
-    // Sharing a passage almost always means sharing where it is, so the link leads
-    // and is selected by default. The raw words stay one tap away for the cases
-    // where they are the point — a wifi key, an address, a code.
+    // A selection offers up to three readings: where it is, what it means, and the
+    // words themselves. Order puts the most-wanted first; nothing is ever replaced.
     const fragment =
-      pending.kind === TARGET_KINDS.SELECTION ? textFragmentUrl(pending.pageUrl, pending.text) : null;
-    if (fragment) found.push({ kind: TARGET_KINDS.SELECTION_LINK, text: fragment });
-    found.push({ kind: pending.kind, text: pending.text });
+      settings.textFragments && pending.kind === TARGET_KINDS.SELECTION
+        ? textFragmentUrl(pending.pageUrl, pending.text, settings.fragmentPrecision)
+        : null;
+    const typed = pending.kind === TARGET_KINDS.SELECTION ? classify(pending.text) : null;
+
+    const linkFirst = settings.selectionDefault === "link";
+    const raw = { kind: pending.kind, text: pending.text };
+
+    // A typed selection is unambiguous, so it outranks a link into the page.
+    if (typed) found.push(typed);
+    if (fragment && linkFirst) found.push({ kind: TARGET_KINDS.SELECTION_LINK, text: fragment });
+    found.push(raw);
+    if (fragment && !linkFirst) found.push({ kind: TARGET_KINDS.SELECTION_LINK, text: fragment });
   }
 
   // In the tab fallback the active tab is this popup itself — offering its
@@ -112,11 +143,11 @@ function renderMeta(code) {
 async function renderCode() {
   clearNotice();
   const source = sources[selected];
-  const text = prepare(source.text, { stripTracking: settings.stripTracking });
+  const text = prepare(source.text, { stripTracking: settings.stripTracking, extra: extraTracking });
 
   let code;
   try {
-    code = encode(text, settings.ecLevel);
+    code = encode(text, settings.ecLevel, CEILINGS[settings.density]);
   } catch (error) {
     current = null;
     el.plate.replaceChildren();
@@ -139,6 +170,7 @@ async function renderCode() {
 
   current = { code, text, pngBlob: null };
   renderActions();
+  if (settings.recentCodes) remember(text, source.kind, { incognito, limit: settings.recentLimit });
 
   // Rasterize up front: navigator.share() and clipboard.write() both need to
   // fire inside the click's transient activation, which an await would consume.
@@ -147,7 +179,10 @@ async function renderCode() {
     if (current?.code === code) {
       current.pngBlob = blob;
       enableBlobActions();
-      if (settings.autoCopy && caps.clipboardImage) copyImage({ silent: true });
+      if (settings.autoCopy) {
+        if (settings.autoCopyFormat === "url" && caps.clipboardText) copyUrl({ silent: true });
+        else if (caps.clipboardImage) copyImage({ silent: true });
+      }
     }
   } catch {
     // Export stays unavailable; the code itself is still on screen and scannable.
@@ -175,10 +210,21 @@ async function copyImage({ silent = false } = {}) {
   }
 }
 
-async function copyUrl() {
+async function copyUrl({ silent = false } = {}) {
   try {
     await navigator.clipboard.writeText(current.text);
-    toast("Copied");
+    if (!silent) toast("Copied");
+  } catch {
+    if (!silent) toast("Could not copy");
+  }
+}
+
+// SVG rather than PNG: for a QR code it is both smaller and resolution-independent,
+// and a PNG data URI at scale 4 runs past what some editors accept on paste.
+async function copyMarkdown() {
+  try {
+    await navigator.clipboard.writeText(asMarkdown(toSvgDataUri(current.code), current.text));
+    toast("Markdown copied");
   } catch {
     toast("Could not copy");
   }
@@ -188,7 +234,19 @@ function saveFile() {
   const svg = settings.exportFormat === "svg";
   const blob = svg ? toSvgBlob(current.code) : current.pngBlob;
   if (!blob) return;
-  download(blob, filenameFor(current.text, svg ? "svg" : "png"));
+  download(
+    blob,
+    filenameFor(current.text, svg ? "svg" : "png", { style: settings.filename, title: pageTitle })
+  );
+}
+
+// The popup caps at 300px; a screen does not. Opens the same page in a tab, which
+// reads the flag and lays the code out to fill the viewport.
+function openLarge() {
+  browser.tabs.create({
+    url: `${browser.runtime.getURL("src/popup/popup.html")}?view=large&t=${encodeURIComponent(current.text)}`,
+  });
+  window.close();
 }
 
 function share() {
@@ -223,7 +281,9 @@ function renderActions() {
   });
   if (caps.clipboardText) {
     buttons.push({ label: "Copy URL", onClick: copyUrl });
+    buttons.push({ label: "Copy Markdown", onClick: copyMarkdown });
   }
+  buttons.push({ label: "Full screen", onClick: openLarge });
 
   for (const { label, onClick, primary, needsBlob } of buttons) {
     const button = document.createElement("button");
@@ -250,10 +310,32 @@ el.settings.addEventListener("click", () => {
   window.close();
 });
 
+// Display-only mode: one code, sized to the viewport, no controls. The target comes
+// in on the URL because this tab has no hand-off record of its own.
+async function renderLarge(text) {
+  document.documentElement.classList.add("large");
+  const code = encode(prepare(text, { stripTracking: settings.stripTracking, extra: extraTracking }), settings.ecLevel, CEILINGS[settings.density]);
+  el.plate.replaceChildren(toSvgElement(code, { label: `QR code for ${truncate(text)}` }));
+  el.target.textContent = truncate(text, 120);
+  el.sources.hidden = true;
+  el.actions.replaceChildren();
+  el.meta.textContent = "";
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape") window.close();
+  });
+}
+
 async function main() {
   const settingsPromise = getSettings();
   const [, loaded] = await Promise.all([initTheme(settingsPromise), settingsPromise]);
   settings = loaded;
+  extraTracking = parseExtraTracking(settings.trackingExtra);
+
+  const params = new URLSearchParams(location.search);
+  if (params.get("view") === "large" && params.get("t")) {
+    await renderLarge(params.get("t"));
+    return;
+  }
 
   // Sizes the plate before the QR lands so the spinner→code swap doesn't reflow.
   document.documentElement.style.setProperty("--qr-size", `${settings.size}px`);

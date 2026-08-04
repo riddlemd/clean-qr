@@ -94,3 +94,23 @@ export function toPngBlob(code, opts) {
 export function toSvgBlob(code) {
   return new Blob([toSvgString(code)], { type: "image/svg+xml" });
 }
+
+// An SVG data URI of a QR code is usually smaller than the PNG and stays sharp at
+// any size, so it is the better default for pasting into a document.
+export function toSvgDataUri(code) {
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(toSvgString(code))))}`;
+}
+
+export function toPngDataUri(code, opts) {
+  return toCanvas(code, opts).toDataURL("image/png");
+}
+
+// Markdown and HTML both accept a data URI in place of a file path, which is what
+// makes a code pasteable into a wiki or a README without an asset to host.
+export function asMarkdown(dataUri, alt = "QR code") {
+  return `![${alt}](${dataUri})`;
+}
+
+export function asHtml(dataUri, alt = "QR code") {
+  return `<img src="${dataUri}" alt="${alt}">`;
+}

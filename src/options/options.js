@@ -1,5 +1,6 @@
 import { initTheme, applyTheme } from "../lib/theme.js";
 import { getSettings, setSetting } from "../lib/settings.js";
+import { recent, forget, trim } from "../lib/history.js";
 import { caps } from "../lib/caps.js";
 import { encode } from "../lib/qr.js";
 import { toSvgElement } from "../lib/render.js";
@@ -41,8 +42,25 @@ async function update(key, value) {
   settings = { ...settings, [key]: value };
   if (key === "theme") applyTheme(value); // repaint before the storage round-trip
   await setSetting(key, value);
+  // Switching the setting off must take what was already stored with it —
+  // leaving the list behind after opting out would be a surprise.
+  if (key === "recentCodes" && !value) {
+    await forget();
+    await paintRecentCount();
+  }
+  if (key === "recentLimit") {
+    await trim(value);
+    await paintRecentCount();
+  }
   // Only these two shape the preview; re-encoding for the rest is thrown away.
   if (key === "size" || key === "ecLevel") renderPreview();
+}
+
+async function paintRecentCount() {
+  const count = (await recent()).length;
+  document.getElementById("recent-count").textContent =
+    count === 0 ? "Nothing stored." : `${count} code${count === 1 ? "" : "s"} stored on this device.`;
+  document.getElementById("clear-recent").disabled = count === 0;
 }
 
 function bind() {
@@ -69,6 +87,18 @@ function bind() {
     select.value = settings[select.dataset.setting];
     select.addEventListener("change", () => update(select.dataset.setting, select.value));
   }
+
+  for (const box of document.querySelectorAll("input[type=checkbox][data-setting]")) {
+    box.checked = Boolean(settings[box.dataset.setting]);
+    box.addEventListener("change", () => update(box.dataset.setting, box.checked));
+  }
+
+  for (const field of document.querySelectorAll("input[type=text][data-setting]")) {
+    field.value = settings[field.dataset.setting] ?? "";
+    // Committed on blur rather than per keystroke, so storage isn't written to on
+    // every letter and the value can't be rejected mid-word.
+    field.addEventListener("change", () => update(field.dataset.setting, field.value.trim()));
+  }
 }
 
 function markUnavailable() {
@@ -89,6 +119,15 @@ async function main() {
   bind();
   markUnavailable();
   renderPreview();
+
+  const clear = document.getElementById("clear-recent");
+  clear.addEventListener("click", async () => {
+    await forget();
+    await paintRecentCount();
+    clear.textContent = "Cleared";
+    setTimeout(() => { clear.textContent = "Clear now"; }, 1600);
+  });
+  await paintRecentCount();
 
   const { version } = browser.runtime.getManifest();
   document.getElementById("version").textContent = `Clean QR for Firefox · v${version}`;
