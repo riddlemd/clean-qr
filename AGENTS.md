@@ -29,9 +29,11 @@ use carry the code-level traps. This file holds only what lives nowhere else.
 - `update_url` and a listed submission are mutually exclusive; listed installs
   auto-update via AMO by ID, even when the XPI is downloaded from a GitHub Release.
 - `web-ext sign` waits up to 15 minutes for review, then prints the dev-hub URL to
-  fetch the signed XPI later — that timeout is not a failure. Run `npm run release`
-  once the version is approved; it pulls the signed XPI from AMO and publishes the
-  GitHub Release, and refuses if the version is unapproved or the file is unsigned.
+  fetch the signed XPI later — that timeout is not a failure. `npm run status:amo`
+  reports where a version sits and exits non-zero until it is approved, so
+  `npm run status:amo && npm run release` is safe to chain. `release` pulls the
+  signed XPI from AMO and publishes the GitHub Release, refusing if the version is
+  unapproved or the file is unsigned.
 - A listed submission needs a `license` and exactly one `categories` entry, neither
   of which comes from `manifest.json` — see `amo-metadata.json`. `"other"` cannot be
   combined with another category.

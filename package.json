@@ -12,6 +12,7 @@
     "build": "web-ext build --source-dir . --overwrite-dest",
     "icons": "command -v rsvg-convert >/dev/null || { echo 'icons: needs librsvg (brew install librsvg)' >&2; exit 1; }; for s in 16 32 48 96 128; do sed 's/context-fill //' icons/icon.svg | rsvg-convert -w $s -h $s -b none -o icons/icon-$s.png || exit 1; done; echo 'icons: regenerated 16/32/48/96/128'",
     "submit:amo": "web-ext sign --source-dir . --channel=listed --amo-metadata=amo-metadata.json",
+    "status:amo": "node scripts/amo-status.mjs",
     "release": "node scripts/release.mjs",
     "test": "node --test 'test/**/*.test.js'"
   },

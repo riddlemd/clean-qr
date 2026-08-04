@@ -5,38 +5,13 @@
 // is not on disk; this fetches it from AMO once the version is approved.
 
 import { execFileSync } from "node:child_process";
-import { createRequire } from "node:module";
-import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
-const require = createRequire(import.meta.url);
-const manifest = require("../manifest.json");
-const VERSION = manifest.version;
-const ADDON_ID = manifest.browser_specific_settings.gecko.id;
+import { ADDON_ID, VERSION, addon, die, jwt, manifest, version } from "./amo.mjs";
+
 const TAG = `v${VERSION}`;
 const ARTIFACTS = "web-ext-artifacts";
-
-const die = (msg) => {
-  console.error(`release: ${msg}`);
-  process.exit(1);
-};
-
-function amoJwt() {
-  const cfgPath = path.join(os.homedir(), ".web-ext-config.mjs");
-  if (!fs.existsSync(cfgPath)) die(`no AMO credentials at ${cfgPath}`);
-  return import(cfgPath).then(({ default: cfg }) => {
-    const { apiKey, apiSecret } = cfg.sign ?? {};
-    if (!apiKey || !apiSecret) die("credentials file has no sign.apiKey/apiSecret");
-    const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
-    const now = Math.floor(Date.now() / 1000);
-    const head = b64({ alg: "HS256", typ: "JWT" });
-    const body = b64({ iss: apiKey, jti: `${now}-release`, iat: now, exp: now + 120 });
-    const sig = crypto.createHmac("sha256", apiSecret).update(`${head}.${body}`).digest("base64url");
-    return `JWT ${head}.${body}.${sig}`;
-  });
-}
 
 // A signed XPI carries Mozilla's signature under META-INF. Publishing an unsigned
 // build would give users a file release Firefox silently refuses to install.
@@ -46,25 +21,22 @@ function isSigned(file) {
 }
 
 async function fetchFromAmo() {
-  const jwt = await amoJwt();
-  const res = await fetch(
-    `https://addons.mozilla.org/api/v5/addons/addon/${encodeURIComponent(ADDON_ID)}/versions/?filter=all_with_unlisted`,
-    { headers: { Authorization: jwt } }
-  );
-  if (!res.ok) die(`AMO returned ${res.status} listing versions`);
-  const { results } = await res.json();
-  const version = results.find((v) => v.version === VERSION);
-  if (!version) die(`AMO has no version ${VERSION} for ${ADDON_ID}`);
+  const auth = await jwt();
+  const record = await addon(auth);
+  if (!record) die(`${ADDON_ID} has never been submitted — run \`npm run submit:amo\``);
 
-  const status = version.file?.status;
+  const ver = await version(auth, record.id);
+  if (!ver) die(`AMO has no version ${VERSION} for ${ADDON_ID}`);
+
+  const status = ver.file?.status;
   if (status !== "public") {
     die(`version ${VERSION} is "${status}", not yet approved — nothing to release`);
   }
-  if (!version.file?.url) die(`AMO gave no download URL for ${VERSION}`);
+  if (!ver.file?.url) die(`AMO gave no download URL for ${VERSION}`);
 
   const out = path.join(ARTIFACTS, `clean_qr-${VERSION}-signed.xpi`);
   fs.mkdirSync(ARTIFACTS, { recursive: true });
-  const dl = await fetch(version.file.url, { headers: { Authorization: jwt } });
+  const dl = await fetch(ver.file.url, { headers: { Authorization: auth } });
   if (!dl.ok) die(`downloading the signed XPI failed with ${dl.status}`);
   fs.writeFileSync(out, Buffer.from(await dl.arrayBuffer()));
   console.log(`downloaded ${out}`);
