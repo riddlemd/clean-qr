@@ -49,17 +49,6 @@ last few words, which matches the same text while keeping the code far sparser.
 letting a long URL produce a dense code a phone camera struggles with off a screen — and
 the footer says so instead of changing your setting silently.
 
-## Install for development
-
-```bash
-npm install
-npm start                            # Firefox with the extension loaded
-npm run start:android -- --adb-device <id>
-npm test                             # unit tests, no browser needed
-npm run lint                         # web-ext lint
-npm run icons                        # regenerate icon assets (needs librsvg)
-```
-
 ## Surfaces
 
 | | Desktop | Android |
@@ -71,8 +60,8 @@ npm run icons                        # regenerate icon assets (needs librsvg)
 | Share to the OS share sheet | no — no Web Share | yes |
 | Copy image to clipboard | yes | yes |
 
-Platform differences are resolved by feature detection in `src/lib/caps.js`, not by
-user-agent sniffing, so the UI adapts as Firefox for Android gains APIs.
+Platform differences are resolved by feature detection rather than user-agent sniffing,
+so the UI adapts as Firefox for Android gains APIs.
 
 ## Permissions
 
@@ -106,49 +95,6 @@ codes are remembered, and the file-naming scheme.
 by another name — so it is opt-in, capped, cleared when you switch it off, and never
 written from a private window.
 
-## Layout
-
-```
-manifest.json
-src/
-  background.js       event page: context menus, popup hand-off
-  popup/              the single UI, shared by desktop and Android
-  options/            settings
-  lib/
-    qr.js             encoding, error-correction downgrade, density ceilings
-    render.js         SVG for display, canvas for export, data URIs
-    target.js         URL cleaning, selection typing, text fragments
-    caps.js           runtime feature detection
-    theme.js          OS theme by default, explicit override
-    settings.js       defaults and validation
-    pending.js        context-menu → popup hand-off
-    history.js        recent codes, when enabled
-  vendor/qrcode.mjs   qrcode-generator 2.0.4, unmodified (MIT)
-test/                 unit tests; stub-browser.js fakes the browser.* APIs
-scripts/              release tooling, not shipped in the XPI
-```
-
-**No build step.** `qrcode-generator` 2.0.4 ships zero-dependency native ESM, so the
-extension ships as plain unbundled, unminified modules. This is deliberate: AMO requires
-full source submission and byte-exact build reproduction for any minified or bundled
-extension, and shipping readable source avoids that entirely.
-
-The one modification is at runtime: the vendored library truncates each UTF-16 code unit
-to a single byte, so `qr.js` replaces its byte converter with `TextEncoder`. Without that,
-any non-ASCII selection encodes to mojibake.
-
-## Releasing
-
-```bash
-npm run send-for-review          # bump, submit to AMO, commit, tag, push
-npm run status:amo               # where the submitted version sits in review
-npm run release                  # signed XPI -> GitHub Release, once approved
-npm run push-listing:amo         # push amo-metadata.json to the live listing
-```
-
-Submission runs before the commit deliberately: AMO rejects for reasons that leave the
-version unused, and committing first would bury a version number that is still free.
-
 ## Theme
 
 Follows the operating system's light/dark setting by default; Settings offers **Auto /
@@ -158,6 +104,12 @@ icon ships in two inks so it stays legible on a dark toolbar.
 The QR code itself always renders dark-on-white regardless of theme — an inverted or
 low-contrast code is a well-known scanner-failure mode, so the theme is not permitted to
 reach it.
+
+## Development
+
+Running it locally, the source layout and the release process are all in
+[DEVELOPMENT.md](DEVELOPMENT.md). There is no build step: the extension ships as plain
+unbundled, unminified ES modules, so what runs in the browser is what is in this repo.
 
 ## License
 

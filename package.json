@@ -25,6 +25,7 @@
     "ignoreFiles": [
       "AGENTS.md",
       "CLAUDE.md",
+      "DEVELOPMENT.md",
       "amo-metadata.json",
       "docs",
       "scripts",

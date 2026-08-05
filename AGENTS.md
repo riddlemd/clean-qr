@@ -1,8 +1,9 @@
 # AGENTS.md
 
 Clean QR — a Firefox extension (MV3), plain unbundled ES modules, no build step.
-Layout and feature docs are in [README.md](README.md); WHY-comments at the point of
-use carry the code-level traps. This file holds only what lives nowhere else.
+Features are documented in [README.md](README.md), layout and the release process in
+[DEVELOPMENT.md](DEVELOPMENT.md); WHY-comments at the point of use carry the code-level
+traps. This file holds only what lives nowhere else.
 
 ## RULES
 
