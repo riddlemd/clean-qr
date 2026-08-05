@@ -66,10 +66,10 @@ the footer says so instead of changing your setting silently.
 | | Desktop | Android |
 | --- | --- | --- |
 | Toolbar button + popup | yes | yes |
-| Context menu (page/link/image/selection/frame) | yes | no — Fenix has no `menus` API |
+| Context menu (page/link/image/selection/frame) | yes | no |
 | Windows/Linux shortcut (`Alt+Shift+Q`) | yes | no |
 | macOS shortcut (`Option+Shift+Q`, ⌥⇧Q) | yes | no |
-| Share to the OS share sheet | no — no Web Share | yes |
+| Share to the OS share sheet | no | yes |
 | Copy image to clipboard | yes | yes |
 
 Platform differences are resolved by feature detection rather than user-agent sniffing,
@@ -83,18 +83,6 @@ so the UI adapts as Firefox for Android gains APIs.
 | `menus` | The right-click entries |
 | `storage` | Persisting your settings |
 | `clipboardWrite` | Copy image, copy URL, copy Markdown, and auto-copy on open |
-
-`clipboardWrite` is the only one that prompts on install. It is required rather than
-optional: clipboard writes from an extension page need transient user activation without
-it, so auto-copy-on-open — which fires with no click behind it — would silently fail.
-
-Notably absent:
-
-- **`downloads`** — would add a warning, and was removed from Firefox for Android in
-  Fenix 79. Saving uses an object-URL `<a download>` instead.
-- **`scripting`** and **host permissions** — nothing is ever read from the page. The
-  context menu already provides the selection and the page URL.
-- **network access** — there is none. The QR code is generated on your machine.
 
 ## Settings
 
