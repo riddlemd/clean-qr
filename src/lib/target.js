@@ -58,9 +58,23 @@ const FILE_EXTENSION =
 // calling internationally. Other bracketed digits are area codes and must stay.
 const TRUNK_PREFIX = /\(0\)/g;
 
+// North American numbering plan: 3-3-4, where neither the area code nor the
+// exchange may begin with 0 or 1. That grouping is what separates a phone number
+// from the digit runs above — reference numbers, dates and ISBNs all group
+// differently, so none of them reach this.
+const NANP = /^\(?([2-9]\d{2})\)?[\s.-]?([2-9]\d{2})[\s.-]?(\d{4})$/;
+
+// A local number is only unambiguous to a phone in the same country. Left blank,
+// the tel: goes out bare and the scanning phone resolves it regionally — right
+// for sharing across a room, wrong across a border, which is the user's call.
+function dialPrefix(countryCode) {
+  const digits = (countryCode ?? "").replace(/\D/g, "");
+  return digits ? `+${digits}` : "";
+}
+
 // Returns { kind, text } for a selection that is unambiguously actionable when
 // scanned, or null. Always offered alongside the raw text, never instead of it.
-export function classify(selection) {
+export function classify(selection, { countryCode = "" } = {}) {
   const text = (selection ?? "").replace(/\s+/g, " ").replace(EDGE_PUNCTUATION, "").trim();
   if (!text) return null;
 
@@ -79,6 +93,14 @@ export function classify(selection) {
     if (digits.length >= 8 && digits.length <= 15) {
       return { kind: TARGET_KINDS.PHONE, text: `tel:+${digits}` };
     }
+  }
+
+  const local = text.match(NANP);
+  if (local) {
+    return {
+      kind: TARGET_KINDS.PHONE,
+      text: `tel:${dialPrefix(countryCode)}${local.slice(1).join("")}`,
+    };
   }
 
   const looksLikeFile = !text.includes("/") && FILE_EXTENSION.test(text);

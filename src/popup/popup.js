@@ -86,7 +86,10 @@ async function collectSources() {
   tabUrl = tab?.url ?? null;
   pageTitle = tab?.title ?? null;
   incognito = Boolean(tab?.incognito);
-  typedSource = pending?.kind === TARGET_KINDS.SELECTION ? classify(pending.text) : null;
+  typedSource =
+    pending?.kind === TARGET_KINDS.SELECTION
+      ? classify(pending.text, { countryCode: settings.countryCode })
+      : null;
   return buildSources();
 }
 

@@ -164,6 +164,28 @@ test("classifies selections a phone can act on", () => {
   assert.deepEqual(classify("example.com/page"), { kind: "link", text: "https://example.com/page" });
 });
 
+test("local numbers classify on their grouping, in every way they get written", () => {
+  for (const written of ["918-555-4351", "(918) 555-4351", "918.555.4351", "918 555 4351", "9185554351"]) {
+    assert.deepEqual(classify(written), { kind: "phone", text: "tel:9185554351" }, written);
+  }
+});
+
+test("a local number takes the configured country code", () => {
+  assert.deepEqual(classify("918-555-4351", { countryCode: "+1" }), {
+    kind: "phone",
+    text: "tel:+19185554351",
+  });
+  // Typed without the plus, which is what the options field invites.
+  assert.deepEqual(classify("918-555-4351", { countryCode: "1" }).text, "tel:+19185554351");
+  assert.equal(classify("918-555-4351", { countryCode: "" }).text, "tel:9185554351");
+});
+
+// A number already carrying a country code says where it belongs; the setting is
+// for numbers that don't, so it must not reach this one.
+test("the country code setting leaves international numbers alone", () => {
+  assert.equal(classify("+44 20 7946 0958", { countryCode: "+1" }).text, "tel:+442079460958");
+});
+
 // The cases that must NOT classify matter more than the ones that must: a wrong
 // guess sends the scanner into a dialer or a map for something that was neither.
 test("leaves anything ambiguous unclassified", () => {
@@ -173,7 +195,9 @@ test("leaves anything ambiguous unclassified", () => {
     "2026-08-04",          // date
     "v1.2.3",              // version
     "978-0-13-235088-4",   // ISBN
-    "555 0134",            // local number, no country code
+    "555 0134",            // too few digits to be a local number
+    "100-200-3000",        // 3-3-4, but no area code starts with 1
+    "012-555-4351",        // nor with 0
     "PN 12345678",         // part number
     "notes.2024.txt",      // filename, not a domain
     "1.5",                 // bare decimal

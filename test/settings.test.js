@@ -70,6 +70,13 @@ test("the new choice settings reject values outside their list", async () => {
   }
 });
 
+test("the country code accepts what the options field allows, and nothing else", async () => {
+  for (const good of ["", "1", "+1", "+44", "+998"]) await setSetting("countryCode", good);
+  for (const bad of ["+", "+1234", "us", "+1 (0)", 1]) {
+    await assert.rejects(() => setSetting("countryCode", bad), /Invalid countryCode/);
+  }
+});
+
 test("setSetting rejects unknown keys and invalid values", async () => {
   await assert.rejects(() => setSetting("bogus", 1), /Unknown setting/);
   await assert.rejects(() => setSetting("ecLevel", "X"), /Invalid ecLevel/);

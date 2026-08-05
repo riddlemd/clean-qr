@@ -22,6 +22,7 @@ export const DEFAULTS = Object.freeze({
   selectionDefault: "link",
   textFragments: true,
   fragmentPrecision: "auto",
+  countryCode: "",        // prefixed onto local numbers; blank encodes them bare
   density: "balanced",    // how hard to fight QR density; see qr.js CEILINGS
   recentCodes: false,     // records what was encoded, so opt-in
   recentLimit: 10,
@@ -42,6 +43,7 @@ const VALID = {
   fragmentPrecision: new Set(["auto", "whole", "ends"]),
   density: new Set(["scannable", "balanced", "correction"]),
   trackingExtra: (v) => typeof v === "string" && v.length <= 500,
+  countryCode: (v) => typeof v === "string" && /^(\+?\d{1,3})?$/.test(v),
 };
 
 const allows = (rule, value) => (typeof rule === "function" ? rule(value) : rule.has(value));

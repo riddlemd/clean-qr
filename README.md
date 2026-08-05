@@ -40,6 +40,12 @@ on rather than inert text. Detection is deliberately reluctant: prices, dates, v
 numbers, ISBNs and part numbers are all left alone, because a wrong guess is worse than
 plain text. The raw words are always offered alongside, never replaced.
 
+Numbers written without a country code — `918-555-4351` — are read on their grouping, so
+they have to be three digits, three digits, four, with neither the area code nor the
+exchange starting in 0 or 1. That is narrow enough to keep reference numbers and ISBNs
+out. Set a country code in Settings to have one added, or leave it blank and let the
+scanning phone resolve the number where it is.
+
 **Links to the passage, not just the page.** Selecting text also offers a
 [text fragment](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments)
 link that scrolls the reader to that passage. Long selections encode only their first and
@@ -94,8 +100,8 @@ Notably absent:
 
 Beyond theme, size and error correction, the options page covers which context-menu
 entries appear, which extra popup buttons are shown, how a selection is offered by
-default, text-fragment precision, extra tracking parameters of your own, whether recent
-codes are remembered, and the file-naming scheme.
+default, text-fragment precision, the country code for local phone numbers, extra tracking
+parameters of your own, whether recent codes are remembered, and the file-naming scheme.
 
 **Recent codes is off by default.** It records what you encoded, which is browsing history
 by another name — so it is opt-in, capped, cleared when you switch it off, and never
