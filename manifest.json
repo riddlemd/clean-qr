@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Generate a QR code for the current page, a link, an image, or selected text. Works entirely offline.",
   "author": "Michael Riddle",
+  "homepage_url": "https://github.com/riddlemd/clean-qr",
 
   "permissions": ["activeTab", "menus", "storage", "clipboardWrite"],
 
