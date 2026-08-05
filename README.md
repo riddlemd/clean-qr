@@ -45,6 +45,12 @@ plain text. The raw words are always offered alongside, never replaced.
 link that scrolls the reader to that passage. Long selections encode only their first and
 last few words, which matches the same text while keeping the code far sparser.
 
+**Lets you overrule it for one code.** Cleaning and selection typing are both good
+defaults and occasionally wrong — a URL whose parameters matter, a phone number you
+wanted as plain digits. Switches under the buttons turn each off for the code in hand
+without changing the setting for every code after it, and each appears only where it
+would actually change something.
+
 **Keeps the code scannable.** Error correction is lowered automatically rather than
 letting a long URL produce a dense code a phone camera struggles with off a screen — and
 the footer says so instead of changing your setting silently.

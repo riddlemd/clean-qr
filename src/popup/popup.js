@@ -15,6 +15,7 @@ import {
   classify,
   parseExtraTracking,
   prepare,
+  stripTracking,
   truncate,
   filenameFor,
   textFragmentUrl,
@@ -27,6 +28,7 @@ const el = {
   target: document.getElementById("target"),
   sources: document.getElementById("sources"),
   actions: document.getElementById("actions"),
+  toggles: document.getElementById("toggles"),
   notice: document.getElementById("notice"),
   meta: document.getElementById("meta"),
   toast: document.getElementById("toast"),
@@ -40,6 +42,14 @@ let current = null;
 let pageTitle = null;
 let extraTracking = null;
 let incognito = false;
+let pending = null;
+let tabUrl = null;
+let typedSource = null;
+// Per-code overrides of two settings. Whether a URL is worth cleaning, or a
+// selection worth reading as a phone number, depends on the code in hand — so
+// these live next to the code and are never written back to storage.
+let stripOn = true;
+let typedOn = true;
 
 function toast(message) {
   el.toast.textContent = message;
@@ -68,12 +78,20 @@ async function activeTab() {
   }
 }
 
+// takePending() consumes the record, so it runs once and the result is kept —
+// the Typed toggle rebuilds the source list and cannot go back for it.
 async function collectSources() {
-  const found = [];
-  const [pending, tab] = await Promise.all([takePending(), activeTab()]);
-  const url = tab?.url ?? null;
+  const [record, tab] = await Promise.all([takePending(), activeTab()]);
+  pending = record;
+  tabUrl = tab?.url ?? null;
   pageTitle = tab?.title ?? null;
   incognito = Boolean(tab?.incognito);
+  typedSource = pending?.kind === TARGET_KINDS.SELECTION ? classify(pending.text) : null;
+  return buildSources();
+}
+
+function buildSources() {
+  const found = [];
 
   if (pending?.text) {
     // A selection offers up to three readings: where it is, what it means, and the
@@ -82,13 +100,12 @@ async function collectSources() {
       settings.textFragments && pending.kind === TARGET_KINDS.SELECTION
         ? textFragmentUrl(pending.pageUrl, pending.text, settings.fragmentPrecision)
         : null;
-    const typed = pending.kind === TARGET_KINDS.SELECTION ? classify(pending.text) : null;
 
     const linkFirst = settings.selectionDefault === "link";
     const raw = { kind: pending.kind, text: pending.text };
 
     // A typed selection is unambiguous, so it outranks a link into the page.
-    if (typed) found.push(typed);
+    if (typedOn && typedSource) found.push(typedSource);
     if (fragment && linkFirst) found.push({ kind: TARGET_KINDS.SELECTION_LINK, text: fragment });
     found.push(raw);
     if (fragment && !linkFirst) found.push({ kind: TARGET_KINDS.SELECTION_LINK, text: fragment });
@@ -96,8 +113,8 @@ async function collectSources() {
 
   // In the tab fallback the active tab is this popup itself — offering its
   // moz-extension:// URL as a "Page URL" source would encode nonsense.
-  if (url && !url.startsWith("moz-extension:") && !found.some((s) => s.kind === TARGET_KINDS.PAGE)) {
-    found.push({ kind: TARGET_KINDS.PAGE, text: url });
+  if (tabUrl && !tabUrl.startsWith("moz-extension:") && !found.some((s) => s.kind === TARGET_KINDS.PAGE)) {
+    found.push({ kind: TARGET_KINDS.PAGE, text: tabUrl });
   }
   return found;
 }
@@ -172,7 +189,7 @@ function renderMeta(code) {
 async function renderCode() {
   clearNotice();
   const source = sources[selected];
-  const text = prepare(source.text, { stripTracking: settings.stripTracking, extra: extraTracking });
+  const text = prepare(source.text, { stripTracking: stripOn, extra: extraTracking });
 
   let code;
   try {
@@ -185,6 +202,9 @@ async function renderCode() {
     el.meta.textContent = "";
     showNotice(error.message, "error");
     renderActions();
+    // Kept on screen: cleaning is one of the few things that can bring an
+    // over-long target back under the limit that just rejected it.
+    renderToggles();
     return;
   }
 
@@ -199,7 +219,10 @@ async function renderCode() {
 
   current = { code, text, pngBlob: null };
   renderActions();
-  if (settings.recentCodes) remember(text, source.kind, { incognito, limit: settings.recentLimit });
+  renderToggles();
+  if (settings.recentCodes) {
+    remember(text, source.kind, { incognito, limit: settings.recentLimit, flags: encodeFlags(source) });
+  }
 
   // Rasterize up front: navigator.share() and clipboard.write() both need to
   // fire inside the click's transient activation, which an await would consume.
@@ -342,6 +365,82 @@ function enableBlobActions() {
   }
 }
 
+// Whether cleaning would change this particular target. A switch that visibly
+// does nothing reads as broken, so the offer is made only where it bites.
+function strippable(text) {
+  return stripTracking(text, extraTracking) !== text;
+}
+
+function setStrip(on) {
+  stripOn = on;
+  renderCode();
+}
+
+function setTyped(on) {
+  typedOn = on;
+  const previous = sources[selected]?.kind;
+  sources = buildSources();
+  // Switching it on is a request to see the typed reading, so select it. Switching
+  // it off leaves the old choice standing, or falls back to the first survivor.
+  const wanted = on && typedSource ? typedSource.kind : previous;
+  const index = sources.findIndex((source) => source.kind === wanted);
+  selected = index === -1 ? 0 : index;
+  renderSources();
+  renderCode();
+}
+
+function renderToggles() {
+  const source = sources[selected];
+  const switches = [];
+
+  if (source && strippable(source.text)) {
+    switches.push({ key: "strip", label: "Strip trackers", on: stripOn, set: setStrip });
+  }
+  if (typedSource) {
+    const kind = KIND_LABELS[typedSource.kind] ?? typedSource.kind;
+    switches.push({ key: "typed", label: `As ${kind.toLowerCase()}`, on: typedOn, set: setTyped });
+  }
+
+  el.toggles.hidden = switches.length === 0;
+
+  // Flipping a switch re-renders, so the same switches are repainted rather than
+  // rebuilt — otherwise the button just clicked is destroyed under the focus ring.
+  const rendered = [...el.toggles.children];
+  const unchanged =
+    rendered.length === switches.length &&
+    rendered.every((button, index) => button.dataset.key === switches[index].key);
+
+  if (unchanged) {
+    rendered.forEach((button, index) => {
+      button.setAttribute("aria-checked", String(switches[index].on));
+    });
+    return;
+  }
+
+  el.toggles.replaceChildren();
+  for (const { key, label, on, set } of switches) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.key = key;
+    button.setAttribute("role", "switch");
+    button.setAttribute("aria-checked", String(on));
+    button.textContent = label;
+    // Read off the element, not the closure: repainting leaves this handler in
+    // place while the state moves on beneath it.
+    button.addEventListener("click", () => set(button.getAttribute("aria-checked") !== "true"));
+    el.toggles.appendChild(button);
+  }
+}
+
+// Only the switches that were actually offered, so an entry records the choices
+// that shaped it rather than defaults that never applied.
+function encodeFlags(source) {
+  const flags = {};
+  if (strippable(source.text)) flags.stripTracking = stripOn;
+  if (typedSource) flags.typed = typedOn;
+  return flags;
+}
+
 el.settings.addEventListener("click", () => {
   browser.runtime.openOptionsPage();
   window.close();
@@ -351,11 +450,14 @@ el.settings.addEventListener("click", () => {
 // in on the URL because this tab has no hand-off record of its own.
 async function renderLarge(text) {
   document.documentElement.classList.add("large");
-  const code = encode(prepare(text, { stripTracking: settings.stripTracking, extra: extraTracking }), settings.ecLevel, CEILINGS[settings.density]);
+  // Encoded as handed over: the popup already applied the tracker switch, and
+  // re-cleaning here would show a different code than the one it was opened from.
+  const code = encode(text, settings.ecLevel, CEILINGS[settings.density]);
   el.plate.replaceChildren(toSvgElement(code, { label: `QR code for ${truncate(text)}` }));
   el.target.textContent = truncate(text, 120);
   el.sources.hidden = true;
   el.actions.replaceChildren();
+  el.toggles.hidden = true;
   el.meta.textContent = "";
   addEventListener("keydown", (e) => {
     if (e.key === "Escape") window.close();
@@ -367,6 +469,7 @@ async function main() {
   const [, loaded] = await Promise.all([initTheme(settingsPromise), settingsPromise]);
   settings = loaded;
   extraTracking = parseExtraTracking(settings.trackingExtra);
+  stripOn = settings.stripTracking;
 
   const params = new URLSearchParams(location.search);
   if (params.get("view") === "large" && params.get("t")) {

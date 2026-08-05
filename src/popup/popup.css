@@ -125,6 +125,44 @@ body {
 .actions button:active:not(:disabled) { background: var(--btn-bg-active); }
 .actions button:disabled { opacity: 0.5; cursor: default; }
 
+/* Per-code overrides, below the exports because they change what gets encoded
+   rather than where it goes. */
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.toggles button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* State reaches the dot as well as the border, so it survives a display mode
+   that drops the accent colour. */
+.toggles button::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.toggles button[aria-checked="true"] {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.toggles button[aria-checked="true"]::before { background: var(--accent); }
+.toggles button:hover { background: var(--btn-bg-hover); }
+
 .meta {
   font-size: 11px;
   color: var(--text-faint);
@@ -201,4 +239,7 @@ html.large .target {
   .actions { gap: 8px; }
   .actions button { flex-basis: calc(25% - 8px); max-width: calc(25% - 8px); height: 48px; }
   .actions button svg { width: 20px; height: 20px; }
+
+  .toggles { gap: 8px; }
+  .toggles button { padding: 8px 14px; font-size: 13px; }
 }

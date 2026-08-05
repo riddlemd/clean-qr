@@ -70,6 +70,36 @@ test("nothing is recorded for empty text", async () => {
   assert.deepEqual(await recent(), []);
 });
 
+test("the toggles that produced a code are recorded with it", async () => {
+  local.clear();
+  await remember("https://example.com/", "page", { flags: { stripTracking: false, typed: true } });
+  const [entry] = await recent();
+  assert.equal(entry.stripTracking, false);
+  assert.equal(entry.typed, true);
+});
+
+// An entry should not claim a choice the popup never offered — a page URL has no
+// typed reading, so recording `typed: false` against it would be an invention.
+test("a toggle that was never offered is left off the entry", async () => {
+  local.clear();
+  await remember("https://example.com/", "page", { flags: { stripTracking: true } });
+  const [entry] = await recent();
+  assert.equal(entry.stripTracking, true);
+  assert.ok(!("typed" in entry), "typed is absent, not false");
+});
+
+test("entries carry no flags when none are passed", async () => {
+  local.clear();
+  await remember("plain", "page");
+  assert.deepEqual(Object.keys(await recent().then((l) => l[0])).sort(), ["kind", "text", "ts"]);
+});
+
+test("unrecognised flags are not stored", async () => {
+  local.clear();
+  await remember("a", "page", { flags: { nonsense: true } });
+  assert.ok(!("nonsense" in (await recent())[0]));
+});
+
 test("forget clears the list", async () => {
   local.clear();
   await remember("a", "page");

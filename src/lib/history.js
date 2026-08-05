@@ -5,17 +5,26 @@
 const KEY = "recent";
 const DEFAULT_LIMIT = 10;
 
+// The per-code toggles that produced the entry. Only recorded where the toggle
+// was actually offered, so a plain page URL carries no meaningless `typed: false`.
+const FLAGS = ["stripTracking", "typed"];
+
 export async function recent() {
   const { [KEY]: list } = await browser.storage.local.get(KEY);
   return Array.isArray(list) ? list : [];
 }
 
-export async function remember(text, kind, { incognito = false, limit = DEFAULT_LIMIT } = {}) {
+export async function remember(text, kind, { incognito = false, limit = DEFAULT_LIMIT, flags = {} } = {}) {
   if (!text || incognito || limit < 1) return;
 
+  const entry = { text, kind, ts: Date.now() };
+  for (const flag of FLAGS) {
+    if (flag in flags) entry[flag] = Boolean(flags[flag]);
+  }
+
   const list = await recent();
-  const without = list.filter((entry) => entry.text !== text);
-  without.unshift({ text, kind, ts: Date.now() });
+  const without = list.filter((existing) => existing.text !== text);
+  without.unshift(entry);
   await browser.storage.local.set({ [KEY]: without.slice(0, limit) });
 }
 
