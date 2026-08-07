@@ -1,6 +1,6 @@
 {
   "name": "clean-qr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Firefox extension that generates QR codes for the current page, links, images, and selected text.",
   "private": true,
   "license": "MIT",
